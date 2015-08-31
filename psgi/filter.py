@@ -295,7 +295,7 @@ def kalmanfilter(data,gf,reg,prior,param,outfile):
              pcov=process_covariance,
              pcov_args=(alpha,p),
              solver_kwargs={'maxitr':param['maxitr']},
-             history_file='history.h5')
+             history_file=param['history_file'])
 
   
   # prepare outfile file

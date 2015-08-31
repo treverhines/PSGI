@@ -27,6 +27,7 @@ def midspace(a,b,N):
 M = basis.FAULT_SEGMENTS
 N = basis.FAULT_N
 slip_reg = np.zeros((0,basis.FAULT_N))
+'''
 for m in range(M):
   col_x = midspace(0,1,basis.FAULT_NLENGTH[m])
   col_y = midspace(-1,0,basis.FAULT_NWIDTH[m])
@@ -49,7 +50,8 @@ for m in range(M):
   
   slip_reg = np.vstack((slip_reg,slip_reg_m))
 
-#slip_reg = np.eye(basis.FAULT_N)
+'''
+slip_reg = args['slip']*np.eye(basis.FAULT_N)
 slip_reg = np.concatenate((slip_reg[...,None],slip_reg[...,None]),axis=-1)
 f['slip'] = slip_reg
 
