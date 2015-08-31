@@ -1,0 +1,98 @@
+#!/usr/bin/env python 
+
+# This script is used to generate the prior.h5 file which is needed as
+# input for PSGI.py
+
+# State variables that do not have a prior specified in this script will
+# be assumed zero with high confidence
+
+import numpy as np
+import h5py
+import argparse
+import sys
+sys.path.append('.')
+import basis
+
+p = argparse.ArgumentParser()
+p.add_argument('--secular_velocity_mean',type=float,default=0.0)
+p.add_argument('--secular_velocity_cov',type=float,default=1e-6)
+p.add_argument('--secular_velocity_file',type=str,default=None)
+p.add_argument('--baseline_displacement_mean',type=float,default=0.0)
+p.add_argument('--baseline_displacement_cov',type=float,default=1e-6)
+p.add_argument('--slip_mean',type=float,default=0.0)
+p.add_argument('--slip_cov',type=float,default=1e-10)
+p.add_argument('--fluidity_mean',type=float,default=0.0)
+p.add_argument('--fluidity_cov',type=float,default=10.0)
+
+Ns = basis.FAULT_N
+Ds = 2
+Nv = basis.FLUIDITY_N
+# find the number of stations
+f = h5py.File('data.h5','r')
+Nx = np.shape(f['mean'])[1]
+Dx = np.shape(f['mean'])[2]
+f.close()
+
+out = h5py.File('prior.h5','w')
+
+# --------------------------------------------------------------------
+# Secular Velocity for each station
+# shape for mean is (Nx,Dx)
+# shape for covariance is (Nx,Dx,Nx,Dx)
+
+# set mean secular velocity prior to zero
+sec_vel = np.zeros((Nx,Dx))
+# This is an easy way to set uniform and uncorrelated covariance 
+I1 = np.eye(Nx)
+I2 = np.eye(Dx)
+sec_vel_cov = np.einsum('ij,kl->ikjl',I1,I2)
+sec_vel_cov *= 1e-6
+
+out['secular_velocity/mean'] = sec_vel
+out['secular_velocity/covariance'] = sec_vel_cov
+
+# --------------------------------------------------------------------
+# Baseline displacement for each station
+# shape for mean is (Nx,Dx)
+# shape for covariance is (Nx,Dx,Nx,Dx)
+
+# set mean secular velocity prior to zero
+baseline = np.zeros((Nx,Dx))
+# This is an easy way to set uniform and uncorrelated covariance 
+I1 = np.eye(Nx)
+I2 = np.eye(Dx)
+baseline_cov = np.einsum('ij,kl->ikjl',I1,I2)
+baseline_cov *= 1e-6
+
+out['baseline_displacement/mean'] = baseline
+out['baseline_displacement/covariance'] = baseline_cov
+
+# --------------------------------------------------------------------
+# Slip prior
+# shape for mean is (Ns,Ds)
+# shape for covariance is (Ns,Ds,Ns,Ds)
+
+# set mean secular velocity prior to zero
+slip = np.zeros((Ns,Ds))
+# This is an easy way to set uniform and uncorrelated covariance 
+I1 = np.eye(Ns)
+I2 = np.eye(Ds)
+slip_cov = np.einsum('ij,kl->ikjl',I1,I2)
+slip_cov *= 1e-10
+
+out['slip/mean'] = slip
+out['slip/covariance'] = slip_cov
+
+# --------------------------------------------------------------------
+# Fluidity prior (NOT exp(Fluidity))
+# shape for mean is (Nv)
+# shape for covariance is (Nv,Nv)
+
+# set mean secular velocity prior to zero
+fluidity = 0.01*np.ones(Nv)
+fluidity_cov = 2.0*np.eye(Nv)
+
+out['fluidity/mean'] = fluidity
+out['fluidity/covariance'] = fluidity_cov
+
+out.close()
