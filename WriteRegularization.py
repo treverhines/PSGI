@@ -27,6 +27,7 @@ def midspace(a,b,N):
 M = basis.FAULT_SEGMENTS
 N = basis.FAULT_N
 slip_reg = np.zeros((0,basis.FAULT_N))
+
 '''
 for m in range(M):
   col_x = midspace(0,1,basis.FAULT_NLENGTH[m])

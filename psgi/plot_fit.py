@@ -10,15 +10,9 @@ import matplotlib
 matplotlib.quiver.Quiver = Quiver # for error ellipses
 
 def quiver_args(position,disp_array,cov_array=None,mask=None):
-  position = np.asarray(position)
-  disp_array = np.asarray(disp_array)
   N = len(position)
   if mask is None:
-    mask = np.zeros((N,3),dtype=bool)
-  else:
-    mask = np.asarray(mask,dtype=bool)
-
-  mask = np.array(np.prod(mask,1),dtype=bool) 
+    mask = np.zeros(N,dtype=bool)
 
   x = position[:,0]
   y = position[:,1]
@@ -28,10 +22,9 @@ def quiver_args(position,disp_array,cov_array=None,mask=None):
   v[mask] = 0.0
 
   if cov_array is not None:
-    cov_array = np.asarray(cov_array)
-    var_u = np.array(np.diag(cov_array[:,0,:,0]))
-    var_v = np.array(np.diag(cov_array[:,1,:,1]))
-    cov_uv = np.array(np.diag(cov_array[:,0,:,1]))
+    var_u = cov_array[:,0,0]
+    var_v = cov_array[:,1,1]
+    cov_uv = cov_array[:,0,1]
     var_u[mask] = 1e-8
     var_v[mask] = 1e-8
     cov_uv[mask] = 1e-8
@@ -72,41 +65,40 @@ def create_default_basemap(lat_lst,lon_lst):
                  resolution = 'h') 
 
 
-def view(data,pred,param):
-  if pred is not None:
-    mask = data['mask']
-    displacement_list = [data['mean'],
-                         pred['mean'],
-                         pred['components/tectonic'],
-                         pred['components/elastic'],
-                         pred['components/viscous']]
-    #covariance_list = [data['covariance'],None,None,None,None]  
-    covariance_list = [data['covariance'],None,None,None,None]
-    disp_type = ['data','predicted','tectonic','elastic','viscous']
-  else:
-    displacement_list = [data['mean']]
-    covariance_list = [data['covariance']]  
-    disp_type = ['data']
+def view(data_list,
+         name_list=None,
+         draw_map=True,
+         quiver_scale=0.00001,
+         scale_length=1.0):
+  # data list is a list of dictionary-lie objects with keys: mean,
+  # covariance, mask, position, time
+  mask_list = []
+  mean_list = []
+  cov_list = []
+  if name_list is None:
+    name_list = ['displacement %s' % i for i in range(len(data_list))]
 
-  times = data['time'][:]
-  lon = data['position'][:,0]
-  lat = data['position'][:,1]
-  if 'name' not in data:
-    station_names = [str(i) for i in range(len(lon))]
-  else:
-    station_names = data['name']
+  for data in data_list:
+    mask_list += [data['mask']]
+    mean_list += [data['mean']]
+    cov_list += [data['covariance']]
+    
+  times = data_list[0]['time'][:]
+  lon = data_list[0]['position'][:,0]
+  lat = data_list[0]['position'][:,1]
+  station_names = data_list[0]['name'][:]
 
-  _view(displacement_list,
-        covariance_list,
+  _view(mean_list,
+        cov_list,
         times,
         station_names,
         lon,
         lat,
-        mask,
-        disp_type=disp_type,
-        draw_map=bool(param['draw_map']),
-        quiver_scale=param['quiver_scale'],
-        scale_length=param['scale_length'])
+        mask_list,
+        disp_type=name_list,
+        draw_map=draw_map,
+        quiver_scale=quiver_scale,
+        scale_length=scale_length)
 
 def _view(displacement_list,
           covariance_list,
@@ -119,7 +111,7 @@ def _view(displacement_list,
           colors=None,
           draw_map=False,
           scale_length=1.0,
-          quiver_scale=0.001,
+          quiver_scale=0.0001,
           map_resolution=200,
           artists=None):
 
@@ -156,21 +148,21 @@ def _view(displacement_list,
     basemap = create_default_basemap(lat,lon)
     position = basemap(lon,lat)
     position = np.array(position).transpose()
-    #main_ax.patch.set_facecolor([0.0,0.0,1.0,0.2])
-    #basemap.drawtopography(ax=main_ax,vmin=-6000,vmax=4000,
-    #                     alpha=1.0,resolution=map_resolution,zorder=0)
-    #basemap.drawcoastlines(ax=main_ax,linewidth=1.5,zorder=1)
-    #basemap.drawcountries(ax=main_ax,linewidth=1.5,zorder=1)
-    #basemap.drawstates(ax=ax,linewidth=1,zorder=1)
-    #basemap.drawrivers(ax=ax,linewidth=1,zorder=1)
-    #basemap.drawmeridians(np.arange(np.floor(basemap.llcrnrlon),
-    #                    np.ceil(basemap.urcrnrlon),1.0),
-    #                    labels=[0,0,0,1],dashes=[2,2],
-    #                    ax=main_ax,zorder=1)
-    #basemap.drawparallels(np.arange(np.floor(basemap.llcrnrlat),
-    #                    np.ceil(basemap.urcrnrlat),1.0),
-    #                    labels=[1,0,0,0],dashes=[2,2],
-    #                    ax=main_ax,zorder=1)
+    main_ax.patch.set_facecolor([0.0,0.0,1.0,0.2])
+    basemap.drawtopography(ax=main_ax,vmin=-6000,vmax=4000,
+                         alpha=1.0,resolution=map_resolution,zorder=0)
+    basemap.drawcoastlines(ax=main_ax,linewidth=1.5,zorder=1)
+    basemap.drawcountries(ax=main_ax,linewidth=1.5,zorder=1)
+    basemap.drawstates(ax=main_ax,linewidth=1,zorder=1)
+    basemap.drawrivers(ax=main_ax,linewidth=1,zorder=1)
+    basemap.drawmeridians(np.arange(np.floor(basemap.llcrnrlon),
+                        np.ceil(basemap.urcrnrlon),1.0),
+                        labels=[0,0,0,1],dashes=[2,2],
+                        ax=main_ax,zorder=1)
+    basemap.drawparallels(np.arange(np.floor(basemap.llcrnrlat),
+                        np.ceil(basemap.urcrnrlat),1.0),
+                        labels=[1,0,0,0],dashes=[2,2],
+                        ax=main_ax,zorder=1)
     basemap.drawmapscale(units='km',
                        lat=basemap.latmin+(basemap.latmax-basemap.latmin)/10.0,
                        lon=basemap.lonmax-(basemap.lonmax-basemap.lonmin)/5.0,
@@ -201,9 +193,9 @@ def _view(displacement_list,
   for idx in range(N):
     if covariance_list[idx] is not None:
       args = quiver_args(position,
-                         displacement_list[idx][time_idx,...],
-                         covariance_list[idx][time_idx,...],
-                         mask[time_idx,...])
+                         displacement_list[idx][time_idx,:,:],
+                         covariance_list[idx][time_idx,:,:,:],
+                         mask[idx][time_idx,:])
 
       Q_lst += [main_ax.quiver(args[0],args[1],args[2],args[3],sigma=args[4],
                                scale_units='xy',
@@ -215,7 +207,7 @@ def _view(displacement_list,
                                zorder=3)]
     else:
       args = quiver_args(position,
-                         displacement_list[idx][time_idx])
+                         displacement_list[idx][time_idx,:,:])
 
       Q_lst += [main_ax.quiver(args[0],args[1],args[2],args[3],
                                scale_units='xy',
@@ -259,9 +251,9 @@ def _view(displacement_list,
     for idx in range(N):
       if covariance_list[idx] is not None:      
         args = quiver_args(position,
-                           displacement_list[idx][time_idx,...],
-                           covariance_list[idx][time_idx,...],
-                           mask[time_idx,...])
+                           displacement_list[idx][time_idx,:,:],
+                           covariance_list[idx][time_idx,:,:,:],
+                           mask[idx][time_idx,:])
     
         Q_lst[idx].set_UVC(args[2],args[3],sigma=args[4])
 
@@ -281,28 +273,31 @@ def _view(displacement_list,
     sub_ax2.cla()
     sub_ax3.cla()
     for i in range(N):
+      midx = mask[i][:,idx]  
+      disp = displacement_list[i][:,idx,:]
+      cov = covariance_list[i][:,idx,:,:]
       if covariance_list[i] is not None:      
-        sub_ax1.errorbar(times,
-                         displacement_list[i][:,idx,0], 
-                         np.sqrt(covariance_list[i][:,idx,0,0]),
+        sub_ax1.errorbar(times[~midx],
+                         disp[~midx,0], 
+                         np.sqrt(cov[~midx,0,0]),
                          color=colors[i],capsize=0,fmt='.')
-        sub_ax2.errorbar(times,
-                         displacement_list[i][:,idx,1], 
-                         np.sqrt(covariance_list[i][:,idx,1,1]),
+        sub_ax2.errorbar(times[~midx],
+                         disp[~midx,1], 
+                         np.sqrt(cov[~midx,1,1]),
                          color=colors[i],capsize=0,fmt='.')
-        sub_ax3.errorbar(times,
-                         displacement_list[i][:,idx,2], 
-                         np.sqrt(covariance_list[i][:,idx,2,2]),
+        sub_ax3.errorbar(times[~midx],
+                         disp[~midx,2], 
+                         np.sqrt(cov[~midx,2,2]),
                          color=colors[i],capsize=0,fmt='.')
       else:
-        sub_ax1.plot(times,
-                     displacement_list[i][:,idx,0], 
+        sub_ax1.plot(times[~midx],
+                     disp[~midx,0], 
                      color=colors[i])
-        sub_ax2.plot(times,
-                     displacement_list[i][:,idx,1], 
+        sub_ax2.plot(times[~midx],
+                     disp[~midx,1], 
                      color=colors[i])
-        sub_ax3.plot(times,
-                     displacement_list[i][:,idx,2],
+        sub_ax3.plot(times[~midx],
+                     disp[~midx,2],
                      color=colors[i])
 
     sub_ax1.set_title(station_label,fontsize=16)

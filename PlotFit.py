@@ -19,6 +19,10 @@ param = vars(p.parse_args())
 data_file = h5py.File('out.h5','r')
 data = data_file['data']
 pred = data_file['predicted']
-psgi.plot_fit.view(data,pred,param)
+tect = data_file['tectonic']
+elast = data_file['elastic']
+visc = data_file['viscous']
+#psgi.plot_fit.view([data],['data'],**param)
+psgi.plot_fit.view([data,pred,tect,elast,visc],['data','predicted','tectonic','elastic','viscous'],**param)
 
 

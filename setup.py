@@ -6,6 +6,6 @@ setup(name='PSGI',
       author='Trever Hines',
       author_email='treverhines@gmail.com',
       url='www.github.com/treverhines/PSGI',
-      packages=['psgi','psgi/modest','psgi/modest/pymls'],
+      packages=['psgi'],
       scripts=['PSGI.py','PlotFit.py','PlotState.py','WriteRegularization.py','WritePrior.py'],
       license='MIT')

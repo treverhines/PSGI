@@ -20,7 +20,7 @@ p.add_argument('--baseline_displacement_variance',type=float,default=1e3)
 p.add_argument('--slip_variance',type=float,default=1e-10)
 p.add_argument('--fluidity_variance',type=float,default=1e3)
 args = vars(p.parse_args())
-
+print(args)
 Ns = basis.FAULT_N
 Ds = 2
 Nv = basis.FLUIDITY_N
@@ -85,7 +85,7 @@ out['slip/variance'] = slip_var
 # shape for covariance is (Nv,Nv)
 
 # set mean secular velocity prior to zero
-fluidity = 1e-2*np.ones(Nv)
+fluidity = 1e-1*np.ones(Nv)
 
 fluidity_var = np.ones(Nv)
 fluidity_var *= args['fluidity_variance']

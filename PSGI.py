@@ -5,7 +5,7 @@ import psgi.filter
 import h5py
 import json
 import logging
-import psgi.modest.timing as timing
+import modest.timing as timing
 
 timing.tic('PSGI')
 # Setup command line argument parser
