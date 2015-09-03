@@ -369,12 +369,18 @@ def kalmanfilter(data,gf,reg,prior,param,outfile):
     di_mask = np.hstack((di_mask,np.zeros(reg_rows,dtype=bool)))
     Cdi = flat_cov(data['covariance'][i,...])
     Cdi = scipy.linalg.block_diag(Cdi,np.eye(reg_rows))
-    if (i != 0) & np.any((time[i] > jump_times) & (time[i-1] <= jump_times)):
+    if np.all(time[i] < jump_times):
+      kalman.pcov_args = (0.0*alpha,p)
+      kalman.next(di,Cdi,time[i],mask=di_mask)
+      kalman.pcov_args = (alpha,p)
+
+    elif (i != 0) & np.any((time[i] > jump_times) & (time[i-1] <= jump_times)):
       logger.info('increasing slip variance by %sx when updating '
                   'from t=%s to t=%s' % (jump_factor,time[i-1],time[i]))
       kalman.pcov_args = (jump_factor*alpha,p)
       kalman.next(di,Cdi,time[i],mask=di_mask)
       kalman.pcov_args = (alpha,p)
+
     else:   
       kalman.next(di,Cdi,time[i],mask=di_mask)
 

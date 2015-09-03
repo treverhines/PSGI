@@ -6,7 +6,7 @@
 "prior":"prior.h5",
 "maxitr":10,
 "slip_acceleration_variance":1.0,
-"jump_times":[2010.0],
+"jump_times":[2009.999],
 "jump_variance_factor":1e2
 }
 

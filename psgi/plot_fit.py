@@ -276,7 +276,7 @@ def _view(displacement_list,
       midx = mask[i][:,idx]  
       disp = displacement_list[i][:,idx,:]
       cov = covariance_list[i][:,idx,:,:]
-      if covariance_list[i] is not None:      
+      if i == 0:
         sub_ax1.errorbar(times[~midx],
                          disp[~midx,0], 
                          np.sqrt(cov[~midx,0,0]),
