@@ -43,8 +43,8 @@ def flat_data(u):
   return u_flat
 
 def flat_cov(cov):
-  Nx,Dx,Nx,Dx = np.shape(cov) 
-  cov_flat = np.reshape(cov,(Nx*Dx,Nx*Dx))
+  Nx,Dx,Dx = np.shape(cov) 
+  cov_flat = scipy.linalg.block_diag(*cov)
   return cov_flat
 
 
@@ -158,11 +158,10 @@ def process_covariance(X,dt,alpha,p):
 
 
 def RMSE(residual,covariance,mask):
-  residual = flat_data(residual)
-  mask = flat_data(mask) 
-  covariance = flat_cov(covariance)
-  residual = residual[~mask] 
-  covariance = covariance[np.ix_(~mask,~mask)] 
+  residual = flat_data(residual[~mask,:])
+  covariance = flat_cov(covariance[~mask,:,:])
+  #residual = residual[~mask] 
+  #covariance = covariance[np.ix_(~mask,~mask)] 
   covinv = np.linalg.inv(covariance)
   #print(covinv)
   return np.sqrt(np.einsum('i,ij,j',residual,covinv,residual))
@@ -275,7 +274,7 @@ def kalmanfilter(data,gf,reg,prior,param,outfile):
 
   # check for consistency between input
   assert np.shape(data['mean']) == (Nt,Nx,Dx)
-  assert np.shape(data['covariance']) == (Nt,Nx,Dx,Nx,Dx)
+  assert np.shape(data['covariance']) == (Nt,Nx,Dx,Dx)
   assert np.shape(F) == (Ns,Ds,Nx,Dx)
   assert np.shape(G) == (Ns,Ds,Nv,Nx,Dx)
   p = state_parser(Ns,Ds,Nv,Nx,Dx)
