@@ -261,6 +261,7 @@ def kalmanfilter(data,gf,reg,prior,param,outfile):
                                  \ uncertainty : (Nx,Dx) array
 
   '''
+
   F = gf['slip'][...]
   G = gf['fluidity'][...]
 
@@ -335,6 +336,8 @@ def kalmanfilter(data,gf,reg,prior,param,outfile):
   outfile['viscous/position'] = data['position'][...]
   outfile['viscous/time'] = data['time'][...]
 
+
+  ## THIS TAKES WAAAAAAYYYYYY TOO LONG!!!!!
   # fill in covariance matrices with something small
   for i in range(Nt):
     for j in range(Nx):    
