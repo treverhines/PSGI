@@ -14,7 +14,7 @@ p = argparse.ArgumentParser(
 p.add_argument('--quiver_scale',type=float,default=0.01)
 p.add_argument('--scale_length',type=float,default=0.1)
 p.add_argument('--draw_map',type=bool,default=True)
-p.add_argument('--slip_clim',type=list,default=[0.0,5.0])
+p.add_argument('--slip_clim',type=list,default=[0.0,10.0])
 p.add_argument('--fluidity_clim',type=list,default=[0.0,5.0])
 
 param = vars(p.parse_args())

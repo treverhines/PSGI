@@ -40,8 +40,9 @@ out = h5py.File('prior.h5','w')
 # set mean secular velocity prior to zero
 
 if args['secular_velocity_file'] is not None:
-  sec_vel = np.loadtxt(args['secular_velocity_file'])
-   
+  sec_vel = np.loadtxt(args['secular_velocity_file'],dtype=str)
+  sec_vel = np.array(sec_vel[:,[1,2]],dtype=float)
+
 else:
   sec_vel = np.zeros((Nx,Dx))
 

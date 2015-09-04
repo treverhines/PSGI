@@ -158,6 +158,9 @@ def process_covariance(X,dt,alpha,p):
 
 
 def RMSE(residual,covariance,mask):
+  if np.all(mask):
+    return 0.0
+
   residual = flat_data(residual[~mask,:])
   covariance = flat_cov(covariance[~mask,:,:])
   #residual = residual[~mask] 
