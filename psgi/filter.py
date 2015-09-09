@@ -297,8 +297,9 @@ def kalmanfilter(data,gf,reg,prior,param,outfile):
              trans_args=(p,),
              pcov=process_covariance,
              pcov_args=(alpha,p),
+             core=False,
              solver_kwargs={'maxitr':param['maxitr']},
-             history_file=param['history_file'])
+             temp_file=param['history_file'])
 
   
   # prepare outfile file
@@ -342,13 +343,20 @@ def kalmanfilter(data,gf,reg,prior,param,outfile):
 
   ## THIS TAKES WAAAAAAYYYYYY TOO LONG!!!!!
   # fill in covariance matrices with something small
-  for i in range(Nt):
-    for j in range(Nx):    
-      outfile['predicted/covariance'][i,j,:,:] = 1e-8*np.eye(3)
-      outfile['tectonic/covariance'][i,j,:,:] = 1e-8*np.eye(3)
-      outfile['elastic/covariance'][i,j,:,:] = 1e-8*np.eye(3)
-      outfile['viscous/covariance'][i,j,:,:] = 1e-8*np.eye(3)
-
+  
+  #for i in range(Nt):
+  #  for j in range(Nx):    
+  #    outfile['predicted/covariance'][i,j,:,:] = 1e-8*np.eye(3)
+  #    outfile['tectonic/covariance'][i,j,:,:] = 1e-8*np.eye(3)
+  #    outfile['elastic/covariance'][i,j,:,:] = 1e-8*np.eye(3)
+  #    outfile['viscous/covariance'][i,j,:,:] = 1e-8*np.eye(3)
+  a = np.ones((Nt,Nx))
+  b = np.eye(3)
+  c = 1e-10*np.einsum('ij,kl',a,b)
+  outfile['predicted/covariance'][...] = c
+  outfile['tectonic/covariance'][...] = c
+  outfile['elastic/covariance'][...] = c
+  outfile['viscous/covariance'][...] = c
 
   outfile.create_dataset('state/all',shape=(Nt,p['total']))
   for k in ['baseline_displacement',
