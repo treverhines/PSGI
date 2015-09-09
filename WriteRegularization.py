@@ -4,7 +4,9 @@ import numpy as np
 import argparse
 import sys
 import h5py
+import modest
 from modest import Perturb
+import modest.misc as misc
 sys.path.append('.')
 import basis
 
@@ -28,6 +30,17 @@ M = basis.FAULT_SEGMENTS
 N = basis.FAULT_N
 slip_reg = np.zeros((0,basis.FAULT_N))
 
+minN = 0
+C = np.zeros((0,0))
+for m in range(M):
+  shape = (basis.FAULT_NLENGTH[m],basis.FAULT_NWIDTH[m])
+  maxN = minN + np.prod(shape)
+  indices = range(minN,maxN)
+  Cm = np.reshape(indices,shape)
+  C = misc.pad_stack((C,Cm),value=-1)
+  minN = maxN
+
+R = modest.tikhonov_matrix(C,1)
 '''
 for m in range(M):
   col_x = midspace(0,1,basis.FAULT_NLENGTH[m])
@@ -50,9 +63,11 @@ for m in range(M):
     slip_reg_m[:,ni] = args['slip']*basis.slip(col_m,n,segment=m,diff=(0,2))
   
   slip_reg = np.vstack((slip_reg,slip_reg_m))
-
 '''
-slip_reg = args['slip']*np.eye(basis.FAULT_N)
+
+
+#slip_reg = args['slip']*np.eye(basis.FAULT_N)
+slip_reg = args['slip']*R
 slip_reg = np.concatenate((slip_reg[...,None],slip_reg[...,None]),axis=-1)
 f['slip'] = slip_reg
 

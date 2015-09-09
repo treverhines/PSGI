@@ -2,9 +2,9 @@
 "data":"data.h5",
 "greens_functions":"greens_functions.h5",
 "regularization":"regularization.h5",
-"history_file":"/home/hinest/Scratch/history.h5",
+"history_file":"temp.h5",
 "prior":"prior.h5",
-"maxitr":10,
+"maxitr":1,
 "slip_acceleration_variance":1.0,
 "jump_times":[2009.999],
 "jump_variance_factor":1e2
