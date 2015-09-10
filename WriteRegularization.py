@@ -66,8 +66,8 @@ for m in range(M):
 '''
 
 
-#slip_reg = args['slip']*np.eye(basis.FAULT_N)
-slip_reg = args['slip']*R
+slip_reg = args['slip']*np.eye(basis.FAULT_N)
+#slip_reg = args['slip']*R
 slip_reg = np.concatenate((slip_reg[...,None],slip_reg[...,None]),axis=-1)
 f['slip'] = slip_reg
 

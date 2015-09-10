@@ -137,6 +137,14 @@ def transition(X,dt,p):
 
   return Xout
 
+@funtime
+def transition_jacobian(X,dt,p):
+  out = np.eye(p['total'])
+  out[p['slip_integral'],p['slip']] = dt
+  out[p['slip_integral'],p['slip_derivative']] = 0.5*dt**2
+  out[p['slip'],p['slip_derivative']] = dt
+  return out
+
 
 @funtime
 def process_covariance(X,dt,alpha,p):
@@ -295,6 +303,8 @@ def kalmanfilter(data,gf,reg,prior,param,outfile):
              ojac_args=(F,G,p,reg_matrix),
              trans=transition,
              trans_args=(p,),
+             tjac=transition_jacobian,   
+             tjac_args=(p,),
              pcov=process_covariance,
              pcov_args=(alpha,p),
              core=False,
