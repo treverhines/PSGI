@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import division
 import numpy as np
 import modest
 import logging
@@ -137,6 +138,14 @@ def transition(X,dt,p):
 
   return Xout
 
+@funtime
+def transition_jacobian(X,dt,p):
+  out = np.eye(p['total'])
+  out[p['slip_integral'],p['slip']] = dt
+  out[p['slip_integral'],p['slip_derivative']] = 0.5*dt**2
+  out[p['slip'],p['slip_derivative']] = dt
+  return out
+
 
 @funtime
 def process_covariance(X,dt,alpha,p):
@@ -167,7 +176,9 @@ def RMSE(residual,covariance,mask):
   #covariance = covariance[np.ix_(~mask,~mask)] 
   covinv = np.linalg.inv(covariance)
   #print(covinv)
-  return np.sqrt(np.einsum('i,ij,j',residual,covinv,residual))
+  weighted_squares = np.einsum('i,ij,j',residual,covinv,residual)
+  mean_weighted_squares = weighted_squares/len(residual) 
+  return np.sqrt(mean_weighted_squares)
   #return np.sqrt(np.einsum('i,i',residual,residual))
 
 
@@ -295,6 +306,8 @@ def kalmanfilter(data,gf,reg,prior,param,outfile):
              ojac_args=(F,G,p,reg_matrix),
              trans=transition,
              trans_args=(p,),
+             tjac=transition_jacobian,   
+             tjac_args=(p,),
              pcov=process_covariance,
              pcov_args=(alpha,p),
              core=False,

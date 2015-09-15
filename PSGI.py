@@ -15,6 +15,9 @@ p = argparse.ArgumentParser(
 p.add_argument('config',type=str,
                help='''name of configuration file''')
 
+p.add_argument('-v','--verbose',action='count',
+               help='''controls verbosity''')
+
 args = vars(p.parse_args())
 config_name = args['config']
 
@@ -28,7 +31,10 @@ stream_handler.setFormatter(formatter)
 file_handler = logging.FileHandler('log','w')
 file_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
-logger.setLevel(logging.INFO)
+if args['verbose'] >= 1:
+  logger.setLevel(logging.DEBUG)
+else:
+  logger.setLevel(logging.INFO)
 
 # load configuration file
 f = open(config_name,'r')
