@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import division
 import numpy as np
 import modest
 import logging
@@ -175,7 +176,9 @@ def RMSE(residual,covariance,mask):
   #covariance = covariance[np.ix_(~mask,~mask)] 
   covinv = np.linalg.inv(covariance)
   #print(covinv)
-  return np.sqrt(np.einsum('i,ij,j',residual,covinv,residual))
+  weighted_squares = np.einsum('i,ij,j',residual,covinv,residual)
+  mean_weighted_squares = weighted_squares/len(residual) 
+  return np.sqrt(mean_weighted_squares)
   #return np.sqrt(np.einsum('i,i',residual,residual))
 
 
