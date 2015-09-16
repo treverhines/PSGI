@@ -86,7 +86,7 @@ out['slip/variance'] = slip_var
 # shape for covariance is (Nv,Nv)
 
 # set mean secular velocity prior to zero
-fluidity = 1e-1*np.ones(Nv)
+fluidity = 0.1*np.ones(Nv)
 
 fluidity_var = np.ones(Nv)
 fluidity_var *= args['fluidity_variance']
