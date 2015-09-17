@@ -22,9 +22,9 @@ import basis
 Nl = 50
 Nw = 50
 
-def slip_vec(x,coeff,strike,dip):
-  s1 = basis.slip(x,coeff[:,0])
-  s2 = basis.slip(x,coeff[:,1])
+def slip_vec(x,coeff,strike,dip,seg):
+  s1 = basis.slip(x,coeff[:,0],segment=seg)
+  s2 = basis.slip(x,coeff[:,1],segment=seg)
   vec = np.array([s1,s2,0*s2]).transpose()
   argz = np.pi/2.0 - np.pi*strike/180
   argx = np.pi/180.0*dip
@@ -33,9 +33,9 @@ def slip_vec(x,coeff,strike,dip):
   vec = T(vec)
   return vec
 
-def slip_mag(x,coeff):
-  rightlateral = basis.slip(x,coeff[:,0])
-  thrust = basis.slip(x,coeff[:,1])
+def slip_mag(x,coeff,seg):
+  rightlateral = basis.slip(x,coeff[:,0],segment=seg)
+  thrust = basis.slip(x,coeff[:,1],segment=seg)
   return np.sqrt(rightlateral**2 + thrust**2)
 
 def view(state,param):
@@ -102,11 +102,11 @@ def view(state,param):
       self.vxs = ()
       for i,t in enumerate(fault_transforms):
         self.xs += XSection(slip_mag,
-                              f_args=(slip,),
-                              base_square_y=(-1,0),
-                              transforms = [t],clim=param['slip_clim']),
+                            f_args=(slip,i),
+                            base_square_y=(-1,0),
+                            transforms = [t],clim=param['slip_clim']),
         self.vxs += VectorXSection(slip_vec,
-                                   f_args=(slip,basis.FAULT_STRIKE[i],basis.FAULT_DIP[i]),
+                                   f_args=(slip,basis.FAULT_STRIKE[i],basis.FAULT_DIP[i],i),
                                    base_square_y=(-1,0),
                                    transforms = [t]),
       HasTraits.__init__(self)
@@ -116,8 +116,8 @@ def view(state,param):
       time_index = np.argmin(abs(state['time'][...] - self.time))
       slip = np.array(state['slip'][time_index])
       for i,t in enumerate(fault_transforms):
-        self.xs[i].set_f_args((slip,))
-        self.vxs[i].set_f_args((slip,basis.FAULT_STRIKE[i],basis.FAULT_DIP[i]))
+        self.xs[i].set_f_args((slip,i))
+        self.vxs[i].set_f_args((slip,basis.FAULT_STRIKE[i],basis.FAULT_DIP[i],i))
         if self.xs[i]._plots is None:
           self.xs[i].draw()
         else:

@@ -24,9 +24,9 @@ FAULT_LENGTH = [50000.0]
 FAULT_WIDTH = [20000.0]
 FAULT_STRIKE = [0.0]
 FAULT_DIP = [60.0]
-FAULT_NLENGTH = [8]
+FAULT_NLENGTH = [10]
 FAULT_NWIDTH = [4]
-FAULT_ORDER = [[3,3]]
+FAULT_ORDER = [[0,0]]
 FLUIDITY_ANCHOR = [-119.25,35.0]
 FLUIDITY_STRIKE = 90.0
 FLUIDITY_LENGTH = 600000.0
@@ -34,10 +34,10 @@ FLUIDITY_WIDTH = 600000.0
 FLUIDITY_THICKNESS = 150000.0
 FLUIDITY_NLENGTH = 1
 FLUIDITY_NWIDTH = 1
-FLUIDITY_NTHICKNESS = 8
+FLUIDITY_NTHICKNESS = 5
 FLUIDITY_ORDER = [0,0,3]
 ######################################################################
-
+ 
 FAULT_N = sum(l*w for l,w in zip(FAULT_NLENGTH,FAULT_NWIDTH))
 FLUIDITY_N = FLUIDITY_NLENGTH*FLUIDITY_NWIDTH*FLUIDITY_NTHICKNESS
 
@@ -140,32 +140,65 @@ def fluidity(x,coeff,diff=None):
 
 if __name__ == '__main__':
   from tplot.xsection import XSection
+  import mayavi.mlab
+  
+  bm = BASEMAP
+
+  sta_array = np.loadtxt('stations.txt',dtype=str)
+  sta_pos = np.array(sta_array[:,[1,2]],dtype=float)
+  sta_pos_x,sta_pos_y = bm(sta_pos[:,0],sta_pos[:,1])
+
+    
+  fluidity_transforms = []
+  x,y = bm(*FLUIDITY_ANCHOR[:2])
+  length = FLUIDITY_LENGTH
+  width = FLUIDITY_WIDTH
+  thickness = FLUIDITY_THICKNESS
+  t = trans.point_stretch([FLUIDITY_LENGTH,
+                           FLUIDITY_THICKNESS,
+                           1.0])
+  t += trans.point_rotation_x(np.pi/2.0)
+  t += trans.point_translation([0.0,-width/2.0,0.0])
+  t += trans.point_rotation_z(np.pi/2.0 - FLUIDITY_STRIKE*np.pi/180)
+  t += trans.point_translation([x,y,0.0])
+  fluidity_transforms += [t]
+
+  t = trans.point_stretch([FLUIDITY_WIDTH,
+                           FLUIDITY_THICKNESS,
+                           1.0])
+  t += trans.point_rotation_x(np.pi/2.0)
+  t += trans.point_rotation_z(-np.pi/2.0)
+  t += trans.point_translation([FLUIDITY_LENGTH/2.0,
+                                0.0,
+                                0.0])
+  t += trans.point_rotation_z(np.pi/2.0 - FLUIDITY_STRIKE*np.pi/180)
+  t += trans.point_translation([x,y,0.0])
+  fluidity_transforms += [t]
+
+  
+  xs1 = XSection(fluidity,
+                f_args=(np.random.random(FLUIDITY_N),),
+                base_square_y=(-1,0),
+                transforms = fluidity_transforms,
+                 clim = (0,1))
+
+  xs2 = XSection(fluidity,
+                 f_args=(np.random.random(FLUIDITY_N),),
+                 base_square_y=(-1,0),
+                 transforms = FAULT_TRANSFORMS)
+  xs1.draw()
+  xs2.draw(color=(0.2,0.2,0.2),opacity=0.5)
+  mayavi.mlab.points3d(sta_pos_x,sta_pos_y,0*sta_pos[:,1],scale_factor=10000)
+  xs1.view()
+
   coeff = np.random.random(FAULT_N)
   xs1 = XSection(slip,
                  f_args=(coeff,),
-                 f_kwargs={"segment":0},
                  base_square_y=(-1,0),
-                 transforms = (FAULT_TRANSFORMS[0],),
+                 transforms = FAULT_TRANSFORMS,
                  clim=(0,1))
-
   xs1.draw()
-
-
   xs1.view()
+
   coeff = np.random.random(FLUIDITY_N)
 
-  xc,yc = BASEMAP(*FLUIDITY_ANCHOR)   
-  t = trans.point_stretch([FLUIDITY_LENGTH,FLUIDITY_THICKNESS,1.0])
-  t += trans.point_rotation_z(np.pi/2.0 - FLUIDITY_STRIKE*np.pi/180)
-  t += trans.point_rotation_x(np.pi/2.0)
-  r = trans.point_translation([xc,yc,0.0])
-  transforms = [t + trans.point_rotation_z(2*np.pi*i/40) + r for i in range(40)]
-  xs2 = XSection(fluidity,
-                 f_args=(np.exp(coeff),),
-                 base_square_y=(-1,0),
-                 transforms = transforms,
-                 clim=(0,1))
-
-
-  xs2.draw()  
-  xs2.view()

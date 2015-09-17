@@ -1,4 +1,8 @@
 build
 example/Synthetic/work
 example/Synthetic/history.h5
+example/Synthetic/gf
+example/Synthetic/data
 example/Synthetic/out.h5
+*~
+*.pyc

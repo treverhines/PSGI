@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import division
 import numpy as np
 import modest
 import logging
@@ -137,6 +138,14 @@ def transition(X,dt,p):
 
   return Xout
 
+@funtime
+def transition_jacobian(X,dt,p):
+  out = np.eye(p['total'])
+  out[p['slip_integral'],p['slip']] = dt
+  out[p['slip_integral'],p['slip_derivative']] = 0.5*dt**2
+  out[p['slip'],p['slip_derivative']] = dt
+  return out
+
 
 @funtime
 def process_covariance(X,dt,alpha,p):
@@ -158,13 +167,21 @@ def process_covariance(X,dt,alpha,p):
 
 
 def RMSE(residual,covariance,mask):
+<<<<<<< HEAD
+=======
+  if np.all(mask):
+    return 0.0
+
+>>>>>>> master
   residual = flat_data(residual[~mask,:])
   covariance = flat_cov(covariance[~mask,:,:])
   #residual = residual[~mask] 
   #covariance = covariance[np.ix_(~mask,~mask)] 
   covinv = np.linalg.inv(covariance)
   #print(covinv)
-  return np.sqrt(np.einsum('i,ij,j',residual,covinv,residual))
+  weighted_squares = np.einsum('i,ij,j',residual,covinv,residual)
+  mean_weighted_squares = weighted_squares/len(residual) 
+  return np.sqrt(mean_weighted_squares)
   #return np.sqrt(np.einsum('i,i',residual,residual))
 
 
@@ -261,6 +278,7 @@ def kalmanfilter(data,gf,reg,prior,param,outfile):
                                  \ uncertainty : (Nx,Dx) array
 
   '''
+
   F = gf['slip'][...]
   G = gf['fluidity'][...]
 
@@ -291,28 +309,70 @@ def kalmanfilter(data,gf,reg,prior,param,outfile):
              ojac_args=(F,G,p,reg_matrix),
              trans=transition,
              trans_args=(p,),
+             tjac=transition_jacobian,   
+             tjac_args=(p,),
              pcov=process_covariance,
              pcov_args=(alpha,p),
+             core=False,
              solver_kwargs={'maxitr':param['maxitr']},
-             history_file=param['history_file'])
+             temp_file=param['history_file'])
 
   
   # prepare outfile file
 
   # copy over data file 
   outfile.create_dataset('data/mean',shape=np.shape(data['mean']))
-  outfile.create_dataset('data/mask',shape=np.shape(data['mask']))
+  outfile.create_dataset('data/mask',shape=np.shape(data['mask']),dtype=bool)
   outfile.create_dataset('data/covariance',shape=np.shape(data['covariance']))
+  outfile['data/name'] = data['name'][...]
   outfile['data/position'] = data['position'][...]
   outfile['data/time'] = data['time'][...]
 
   outfile.create_dataset('predicted/mean',shape=np.shape(data['mean']))
+  outfile.create_dataset('predicted/covariance',shape=np.shape(data['covariance']))
+  outfile['predicted/name'] = data['name'][...]
+  outfile['predicted/mask'] = np.array(0.0*data['mask'][...],dtype=bool)
   outfile['predicted/position'] = data['position'][...]
   outfile['predicted/time'] = data['time'][...]
 
-  outfile.create_dataset('predicted/components/tectonic',shape=np.shape(data['mean']))
-  outfile.create_dataset('predicted/components/viscous',shape=np.shape(data['mean']))
-  outfile.create_dataset('predicted/components/elastic',shape=np.shape(data['mean']))
+  outfile.create_dataset('tectonic/mean',shape=np.shape(data['mean']))
+  outfile.create_dataset('tectonic/covariance',shape=np.shape(data['covariance']))
+  outfile['tectonic/name'] = data['name'][...]
+  outfile['tectonic/mask'] = np.array(0.0*data['mask'][...],dtype=bool)
+  outfile['tectonic/position'] = data['position'][...]
+  outfile['tectonic/time'] = data['time'][...]
+
+  outfile.create_dataset('elastic/mean',shape=np.shape(data['mean']))
+  outfile.create_dataset('elastic/covariance',shape=np.shape(data['covariance']))
+  outfile['elastic/name'] = data['name'][...]
+  outfile['elastic/mask'] = np.array(0.0*data['mask'][...],dtype=bool)
+  outfile['elastic/position'] = data['position'][...]
+  outfile['elastic/time'] = data['time'][...]
+
+  outfile.create_dataset('viscous/mean',shape=np.shape(data['mean']))
+  outfile.create_dataset('viscous/covariance',shape=np.shape(data['covariance']))
+  outfile['viscous/name'] = data['name'][...]
+  outfile['viscous/mask'] = np.array(0.0*data['mask'][...],dtype=bool)
+  outfile['viscous/position'] = data['position'][...]
+  outfile['viscous/time'] = data['time'][...]
+
+
+  ## THIS TAKES WAAAAAAYYYYYY TOO LONG!!!!!
+  # fill in covariance matrices with something small
+  
+  #for i in range(Nt):
+  #  for j in range(Nx):    
+  #    outfile['predicted/covariance'][i,j,:,:] = 1e-8*np.eye(3)
+  #    outfile['tectonic/covariance'][i,j,:,:] = 1e-8*np.eye(3)
+  #    outfile['elastic/covariance'][i,j,:,:] = 1e-8*np.eye(3)
+  #    outfile['viscous/covariance'][i,j,:,:] = 1e-8*np.eye(3)
+  a = np.ones((Nt,Nx))
+  b = np.eye(3)
+  c = 1e-10*np.einsum('ij,kl',a,b)
+  outfile['predicted/covariance'][...] = c
+  outfile['tectonic/covariance'][...] = c
+  outfile['elastic/covariance'][...] = c
+  outfile['viscous/covariance'][...] = c
 
   outfile.create_dataset('state/all',shape=(Nt,p['total']))
   for k in ['baseline_displacement',
@@ -332,16 +392,25 @@ def kalmanfilter(data,gf,reg,prior,param,outfile):
     outfile['data/covariance'][i,...] = data['covariance'][i,...]
     di = flat_data(data['mean'][i,...])
     di = np.hstack((di,np.zeros(reg_rows)))
-    di_mask = np.array(flat_data(data['mask'][i,...]),dtype=bool)
+    di_mask = np.array(data['mask'][i,:],dtype=bool)
+    # expand to three dimensions
+    di_mask = np.repeat(di_mask[:,None],3,1)
+    di_mask = flat_data(di_mask)
     di_mask = np.hstack((di_mask,np.zeros(reg_rows,dtype=bool)))
     Cdi = flat_cov(data['covariance'][i,...])
     Cdi = scipy.linalg.block_diag(Cdi,np.eye(reg_rows))
-    if (i != 0) & np.any((time[i] > jump_times) & (time[i-1] <= jump_times)):
+    if np.all(time[i] < jump_times):
+      kalman.pcov_args = (0.0*alpha,p)
+      kalman.next(di,Cdi,time[i],mask=di_mask)
+      kalman.pcov_args = (alpha,p)
+
+    elif (i != 0) & np.any((time[i] > jump_times) & (time[i-1] <= jump_times)):
       logger.info('increasing slip variance by %sx when updating '
-                  'from t=%s to t=%s' % (jump_factor,time[i],time[i+1]))
+                  'from t=%s to t=%s' % (jump_factor,time[i-1],time[i]))
       kalman.pcov_args = (jump_factor*alpha,p)
       kalman.next(di,Cdi,time[i],mask=di_mask)
       kalman.pcov_args = (alpha,p)
+
     else:   
       kalman.next(di,Cdi,time[i],mask=di_mask)
 
@@ -375,25 +444,25 @@ def kalmanfilter(data,gf,reg,prior,param,outfile):
     mask[p['secular_velocity']] = 1.0
     mask[p['baseline_displacement']] = 1.0
     state = outfile['state/all'][i]*mask
-    outfile['predicted/components/tectonic'][i,...] = observation(
-                                                        state,
-                                                        time[i],
-                                                        F,G,p,
-                                                        flatten=False)
+    outfile['tectonic/mean'][i,...] = observation(
+                                        state,
+                                        time[i],
+                                        F,G,p,
+                                        flatten=False)
 
     mask = np.zeros(p['total'])
     mask[p['slip']] = 1.0
     state = outfile['state/all'][i]*mask
-    outfile['predicted/components/elastic'][i,...] = observation(
-                                                      state,
-                                                      time[i],
-                                                      F,G,p,
-                                                      flatten=False)
+    outfile['elastic/mean'][i,...] = observation(
+                                       state,
+                                       time[i],
+                                       F,G,p,
+                                       flatten=False)
     
     visc = (outfile['predicted/mean'][i,...] - 
-            outfile['predicted/components/tectonic'][i,...] - 
-            outfile['predicted/components/elastic'][i,...])
-    outfile['predicted/components/viscous'][i,...] = visc
+            outfile['tectonic/mean'][i,...] - 
+            outfile['elastic/mean'][i,...])
+    outfile['viscous/mean'][i,...] = visc
 
   logger.info('total RMSE: %s' % error)
 
