@@ -167,28 +167,20 @@ def process_covariance(X,dt,alpha,p):
 
 
 def RMSE(residual,covariance,mask):
-<<<<<<< HEAD
-=======
   if np.all(mask):
     return 0.0
 
->>>>>>> master
   residual = flat_data(residual[~mask,:])
   covariance = flat_cov(covariance[~mask,:,:])
-  #residual = residual[~mask] 
-  #covariance = covariance[np.ix_(~mask,~mask)] 
   covinv = np.linalg.inv(covariance)
-  #print(covinv)
   weighted_squares = np.einsum('i,ij,j',residual,covinv,residual)
   mean_weighted_squares = weighted_squares/len(residual) 
   return np.sqrt(mean_weighted_squares)
-  #return np.sqrt(np.einsum('i,i',residual,residual))
 
 
 def form_regularization(reg,p):
   reg_matrix = np.zeros((0,p['total']))
   for i,v in reg.iteritems():
-    #if len(np.shape(p[i])) == 2:
     if len(np.shape(v)) == 3:
       for j in range(np.shape(v)[2]):
         r1 = v[:,:,j]
@@ -356,16 +348,6 @@ def kalmanfilter(data,gf,reg,prior,param,outfile):
   outfile['viscous/position'] = data['position'][...]
   outfile['viscous/time'] = data['time'][...]
 
-
-  ## THIS TAKES WAAAAAAYYYYYY TOO LONG!!!!!
-  # fill in covariance matrices with something small
-  
-  #for i in range(Nt):
-  #  for j in range(Nx):    
-  #    outfile['predicted/covariance'][i,j,:,:] = 1e-8*np.eye(3)
-  #    outfile['tectonic/covariance'][i,j,:,:] = 1e-8*np.eye(3)
-  #    outfile['elastic/covariance'][i,j,:,:] = 1e-8*np.eye(3)
-  #    outfile['viscous/covariance'][i,j,:,:] = 1e-8*np.eye(3)
   a = np.ones((Nt,Nx))
   b = np.eye(3)
   c = 1e-10*np.einsum('ij,kl',a,b)
@@ -413,6 +395,8 @@ def kalmanfilter(data,gf,reg,prior,param,outfile):
 
     else:   
       kalman.next(di,Cdi,time[i],mask=di_mask)
+
+    print(kalman.get_posterior()[0][p['fluidity']])
 
   logger.info('starting Rauch-Tung-Striebel smoothing')
   kalman.smooth()
