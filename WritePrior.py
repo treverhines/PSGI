@@ -18,7 +18,7 @@ p.add_argument('--secular_velocity_variance',type=float,default=1e3)
 p.add_argument('--secular_velocity_file',type=str,default=None)
 p.add_argument('--baseline_displacement_variance',type=float,default=1e3)
 p.add_argument('--slip_variance',type=float,default=1e-10)
-p.add_argument('--fluidity_variance',type=float,default=1e3)
+p.add_argument('--fluidity_variance',type=float,default=1e1)
 args = vars(p.parse_args())
 print(args)
 Ns = basis.FAULT_N

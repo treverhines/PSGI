@@ -97,7 +97,7 @@ def view(state,param):
 
     def __init__(self):
       time_index = np.argmin(abs(state['time'][...] - self.time))
-      slip = np.array(state['slip'][time_index])
+      slip = np.array(state['slip_derivative'][time_index])
       self.xs = ()
       self.vxs = ()
       for i,t in enumerate(fault_transforms):
@@ -114,7 +114,7 @@ def view(state,param):
     @on_trait_change('time,scene.activated')
     def update_plot(self):
       time_index = np.argmin(abs(state['time'][...] - self.time))
-      slip = np.array(state['slip'][time_index])
+      slip = np.array(state['slip_derivative'][time_index])
       for i,t in enumerate(fault_transforms):
         self.xs[i].set_f_args((slip,i))
         self.vxs[i].set_f_args((slip,basis.FAULT_STRIKE[i],basis.FAULT_DIP[i],i))

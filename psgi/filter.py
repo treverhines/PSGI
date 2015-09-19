@@ -5,6 +5,7 @@ import modest
 import logging
 import h5py
 import scipy
+import prior
 from modest import funtime
 
 logger = logging.getLogger(__name__)
@@ -197,35 +198,8 @@ def form_regularization(reg,p):
   return reg_matrix  
 
 
-def form_prior(prior,p):
-  Xprior = np.zeros(p['total'])  
-  Cprior = 1e-10*np.eye(p['total'],p['total'])
-  for i,v in prior.iteritems():
-    if i == 'fluidity':
-      flu_prior = v['mean'][...]
-      flu_prior_var = v['variance'][...] 
-      # user specified fluidity variance needs to be converted to 
-      # the variance of beta where fluidity = exp(beta) and beta
-      # is the fluidity parameter which PSGI estimates.
-      
-      # \sigma_{beta}^2 = \frac{d log(\fluidity)}{d \fluidty}^2 * \sigma_{fluidity}^2 
-      # \sigma_{beta}^2 = \frac{\sigma_{fluidity}^2}{\fluidty}^2}
-
-      # convert the fluidity prior to prior for beta
-      beta_prior_var = flu_prior_var/(flu_prior**2)
-      beta_prior = np.log(flu_prior)
-      vnew = {}
-      vnew['mean'] = beta_prior
-      vnew['variance'] = beta_prior_var
-      v = vnew
-
-    Xprior[p[i]] = v['mean'][...]
-    Cprior[p[i],p[i]] = v['variance'][...]
-
-  return Xprior,Cprior
-
 @funtime
-def kalmanfilter(data,gf,reg,prior,param,outfile):
+def kalmanfilter(data,gf,reg,param,outfile):
   '''
   Nt: number of time steps
   Nx: number of positions
@@ -289,7 +263,9 @@ def kalmanfilter(data,gf,reg,prior,param,outfile):
   assert np.shape(G) == (Ns,Ds,Nv,Nx,Dx)
   p = state_parser(Ns,Ds,Nv,Nx,Dx)
 
-  Xprior,Cprior = form_prior(prior,p)   
+  fprior = prior.create_formatted_prior(param,p)
+  print(fprior)
+  Xprior,Cprior = prior.create_prior(fprior,p)   
   reg_matrix = form_regularization(reg,p)
   reg_rows = len(reg_matrix)  
 

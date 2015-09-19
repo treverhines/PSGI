@@ -48,9 +48,9 @@ if args['slip_order'] == 0:
 
 elif args['slip_order'] == 2:
   for m in range(M):
-    col_x = np.unique(np.array(basis.FAULT_KNOTS[m])[:,0])
+    col_x = np.unique(basis.FAULT_KNOTS[m][0])
     col_x = reg_points(col_x)
-    col_y = np.unique(np.array(basis.FAULT_KNOTS[m])[:,1])
+    col_y = np.unique(basis.FAULT_KNOTS[m][1])
     col_y = reg_points(col_y)
     xgrid,ygrid = np.meshgrid(col_x,col_y)
     xflat = xgrid.flatten()
@@ -80,15 +80,15 @@ f['slip'] = slip_reg
 # form fluidity regularization
 N = basis.FLUIDITY_N
 fluidity_reg = np.zeros((0,basis.FLUIDITY_N))
-if f['fluidity_order'] == 0:
+if args['fluidity_order'] == 0:
   fluidity_reg = args['fluidity']*np.eye(N)  
 
-elif f['fluidity_order'] == 2:
-  col_x = np.unique(np.array(basis.FLUIDITY_KNOTS)[:,0])
+elif args['fluidity_order'] == 2:
+  col_x = np.unique(basis.FLUIDITY_KNOTS[0])
   col_x = reg_points(col_x)
-  col_y = np.unique(np.array(basis.FLUIDITY_KNOTS)[:,1])
+  col_y = np.unique(basis.FLUIDITY_KNOTS[1])
   col_y = reg_points(col_y)
-  col_z = np.unique(np.array(basis.FLUIDITY_KNOTS)[:,2])
+  col_z = np.unique(basis.FLUIDITY_KNOTS[2])
   col_z = reg_points(col_z)
   xgrid,ygrid,zgrid = np.meshgrid(col_x,col_y,col_z)
   xflat = xgrid.flatten()

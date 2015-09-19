@@ -47,21 +47,17 @@ gf_file = h5py.File(config['greens_functions'],'r')
 
 reg_file = h5py.File(config['regularization'],'r')
 
-prior_file = h5py.File(config['prior'],'r')
-
 out_file = h5py.File('out.h5','w')
 
 out = psgi.filter.kalmanfilter(data_file,
                                gf_file,
                                reg_file,
-                               prior_file,
                                config,
                                out_file)
 
 data_file.close()
 gf_file.close()
 reg_file.close()
-prior_file.close()
 out_file.close()
 
 logger.info('output saved to out.h5')
