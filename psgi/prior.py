@@ -67,10 +67,10 @@ def create_prior(prior,p):
     if i == 'fluidity':
       flu_prior = v['mean'][...]
       flu_prior_var = v['variance'][...]
-      # user specified fluidity variance needs to be converted to                             
+      # user specified fluidity variance needs to be converted to         
       # the variance of beta where fluidity = exp(beta) and beta   
       # is the fluidity parameter which PSGI estimates.    
-      # \sigma_{beta}^2 = \frac{d log(\fluidity)}{d \fluidty}^2 * \sigma_{fluidity}^2    
+      # \sigma_{beta}^2 = \frac{d log(\fluidity)}{d \fluidty}^2 * \sigma_{fluidity}^2
       # \sigma_{beta}^2 = \frac{\sigma_{fluidity}^2}{\fluidty}^2}       
       # convert the fluidity prior to prior for beta                
       beta_prior_var = flu_prior_var/(flu_prior**2)

@@ -6,6 +6,7 @@ import logging
 import h5py
 import scipy
 import prior
+import reg
 from modest import funtime
 
 logger = logging.getLogger(__name__)
@@ -179,27 +180,8 @@ def RMSE(residual,covariance,mask):
   return np.sqrt(mean_weighted_squares)
 
 
-def form_regularization(reg,p):
-  reg_matrix = np.zeros((0,p['total']))
-  for i,v in reg.iteritems():
-    if len(np.shape(v)) == 3:
-      for j in range(np.shape(v)[2]):
-        r1 = v[:,:,j]
-        r2 = np.zeros((len(r1),p['total']))
-        r2[:,p[i][:,j]] = r1
-        reg_matrix = np.vstack((reg_matrix,r2))
-
-    else:
-      r1 = v[:,:]
-      r2 = np.zeros((len(r1),p['total']))
-      r2[:,p[i]] = r1
-      reg_matrix = np.vstack((reg_matrix,r2))
-
-  return reg_matrix  
-
-
 @funtime
-def kalmanfilter(data,gf,reg,param,outfile):
+def kalmanfilter(data,gf,param,outfile):
   '''
   Nt: number of time steps
   Nx: number of positions
@@ -264,9 +246,10 @@ def kalmanfilter(data,gf,reg,param,outfile):
   p = state_parser(Ns,Ds,Nv,Nx,Dx)
 
   fprior = prior.create_formatted_prior(param,p)
-  print(fprior)
   Xprior,Cprior = prior.create_prior(fprior,p)   
-  reg_matrix = form_regularization(reg,p)
+
+  freg = reg.create_formatted_regularization(param,p)
+  reg_matrix = reg.create_regularization(freg,p)
   reg_rows = len(reg_matrix)  
 
   kalman = modest.KalmanFilter(

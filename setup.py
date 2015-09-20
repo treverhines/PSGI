@@ -7,5 +7,5 @@ setup(name='PSGI',
       author_email='treverhines@gmail.com',
       url='www.github.com/treverhines/PSGI',
       packages=['psgi'],
-      scripts=['PSGI.py','PlotFit.py','PlotState.py','WriteRegularization.py','WritePrior.py'],
+      scripts=['PSGI.py','PlotFit.py','PlotState.py'],
       license='MIT')
