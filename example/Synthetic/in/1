@@ -1,5 +1,5 @@
 {
-"output":"out.h5",
+"output":"out/1.h5",
 "data":"data.h5",
 "greens_functions":"greens_functions.h5",
 "history_file":"/home/hinest/Scratch/temp.h5",

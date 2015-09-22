@@ -18,6 +18,7 @@ p.add_argument('config',type=str,
 p.add_argument('-v','--verbose',action='count',
                help='''controls verbosity''')
 
+
 args = vars(p.parse_args())
 config_name = args['config']
 
@@ -45,7 +46,7 @@ data_file = h5py.File(config['data'],'r')
 
 gf_file = h5py.File(config['greens_functions'],'r')
 
-out_file = h5py.File('out.h5','w')
+out_file = h5py.File(config['output'],'w')
 
 out = psgi.filter.kalmanfilter(data_file,
                                gf_file,
