@@ -11,7 +11,6 @@ import psgi.plot_state
 p = argparse.ArgumentParser(
       description='plots the data and best fit data found from PSGI')
 
-p.add_argument('--file',type=str)
 p.add_argument('--quiver_scale',type=float,default=0.01)
 p.add_argument('--scale_length',type=float,default=0.1)
 p.add_argument('--draw_map',type=bool,default=True)

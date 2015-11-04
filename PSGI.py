@@ -83,9 +83,6 @@ if config['slip_model'] == 'stochastic':
                              config,
                              out_file)
 
-out_file = h5py.File(config['output'],'w')
-
-
 elif config['slip_model'] == 'parameterized':
   out = psgi.parameterized.main(data_file,
                              gf_file,
