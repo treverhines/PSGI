@@ -39,13 +39,16 @@ p.add_argument('--slip_regularization_order',type=int,default=0)
 p.add_argument('--fluidity_regularization_order',type=int,default=0)
 p.add_argument('--solver',type=str,default='lstsq')
 
+
 if os.path.exists('config.json'):
   config_file = open('config.json','r')
   config_default = json.load(config_file)
 else:
   config_default = {}
+
 p.set_defaults(**config_default)
 config = vars(p.parse_args())
+
 
 # Setup logger
 logger = logging.getLogger()
@@ -73,11 +76,15 @@ gf_file = h5py.File(config['gf_file'],'r')
 
 out_file = h5py.File(config['out_file'],'w')
 
+
 if config['slip_model'] == 'stochastic':
   out = psgi.stochastic.main(data_file,
                              gf_file,
                              config,
                              out_file)
+
+out_file = h5py.File(config['output'],'w')
+
 
 elif config['slip_model'] == 'parameterized':
   out = psgi.parameterized.main(data_file,

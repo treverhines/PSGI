@@ -8,6 +8,10 @@ import modest.misc as misc
 sys.path.append('.')
 import basis
 
+def midspace(a,b,N):
+  l = np.linspace(a,b,N+1)
+  return np.diff(l)/2.0 + l[:-1]
+
 def reg_points(knots):
   '''
   returns a list of collocation points used for regularization. These consists
@@ -15,6 +19,7 @@ def reg_points(knots):
   '''
   knots = np.array(knots,copy=True)
   midpoints = 0.5*np.diff(knots) + knots[:-1]    
+  #return midpoints
   return np.concatenate((knots,midpoints))
 
 def _create_formatted_regularization(params,p,slip_model='stochastic'):
@@ -32,8 +37,10 @@ def _create_formatted_regularization(params,p,slip_model='stochastic'):
     for m in range(M):
       col_x = np.unique(basis.FAULT_KNOTS[m][0])
       col_x = reg_points(col_x)
+      #col_x = midspace(0,1,basis.FAULT_NLENGTH[m])
       col_y = np.unique(basis.FAULT_KNOTS[m][1])
       col_y = reg_points(col_y)
+      #col_y = midspace(-1,0,basis.FAULT_NWIDTH[m])
       xgrid,ygrid = np.meshgrid(col_x,col_y)
       xflat = xgrid.flatten()
       yflat = ygrid.flatten()
@@ -43,17 +50,18 @@ def _create_formatted_regularization(params,p,slip_model='stochastic'):
 
       slip_reg_m = np.zeros((len(col_m),N))
       for ni,n in enumerate(Perturb(np.zeros(N),1.0)):
-        slip_reg_m[:,ni] = basis.slip(col_m,n,segment=m,diff=(2,0))
-        slip_reg_m[:,ni] *= params['slip_regularization']
-
-      slip_reg = np.vstack((slip_reg,slip_reg_m))
-
-      slip_reg_m = np.zeros((len(col_m),N))
-      for ni,n in enumerate(Perturb(np.zeros(N),1.0)):
-        slip_reg_m[:,ni] = basis.slip(col_m,n,segment=m,diff=(0,2))
-        slip_reg_m[:,ni] *= params['slip_regularization']
+        slip_reg_m[:,ni] = (basis.slip(col_m,n,segment=m,diff=(2,0)) + 
+                             basis.slip(col_m,n,segment=m,diff=(0,2)))
+      #slip_reg_m2 = np.zeros((len(col_m),N))
+      #for ni,n in enumerate(Perturb(np.zeros(N),1.0)):
+      #  slip_reg_m2[:,ni] = basis.slip(col_m,n,segment=m,diff=(0,2))
     
+      #slip_reg_m = np.vstack((slip_reg_m1,slip_reg_m2))
       slip_reg = np.vstack((slip_reg,slip_reg_m))
+  
+    slip_reg = np.concatenate((slip_reg[...,None],slip_reg[...,None]),axis=-1)
+    slip_reg /= np.max(np.max(np.abs(slip_reg)))
+    slip_reg *= params['slip_regularization']
 
   else:
     print('invalid slip order')
@@ -91,8 +99,9 @@ def _create_formatted_regularization(params,p,slip_model='stochastic'):
     fluidity_reg = np.zeros((len(col_m),N))
     for ni,n in enumerate(Perturb(np.zeros(N),1.0)):
       fluidity_reg[:,ni] = basis.fluidity(col_m,n,diff=(0,0,2))
-      fluidity_reg[:,ni] *= params['fluidity_regularization']
 
+    fluidity_reg /= np.max(np.max(np.abs(fluidity_reg)))
+    fluidity_reg *= params['fluidity_regularization']
   else:
     print('invalid fluidity order')
 

@@ -226,6 +226,11 @@ def main(data,gf,param,outfile):
                                  \ uncertainty : (Nx,Dx) array
 
   '''
+  # set attributes of outfile
+  outfile.attrs.update(param)
+  outfile.attrs.update(gf.attrs)
+  outfile.attrs.update(data.attrs)
+  
   F = gf['slip'][...]
   G = gf['fluidity'][...]
 
