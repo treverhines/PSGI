@@ -17,13 +17,12 @@ def reg_points(knots):
   midpoints = 0.5*np.diff(knots) + knots[:-1]    
   return np.concatenate((knots,midpoints))
 
-def create_formatted_regularization(params,p):
+def _create_formatted_regularization(params,p,slip_model='stochastic'):
   f = {}
   order = params['slip_regularization_order']
   if order == 0:
     N = p['Ns']
     slip_reg = params['slip_regularization']*np.eye(N)
-    slip_reg = np.concatenate((slip_reg[...,None],slip_reg[...,None]),axis=-1)
 
   elif order == 2:
     import basis
@@ -55,10 +54,16 @@ def create_formatted_regularization(params,p):
         slip_reg_m[:,ni] *= params['slip_regularization']
     
       slip_reg = np.vstack((slip_reg,slip_reg_m))
-      slip_reg = np.concatenate((slip_reg[...,None],slip_reg[...,None]),axis=-1)
 
   else:
     print('invalid slip order')
+
+  if slip_model == 'parameterized':
+    slip_reg = np.repeat(slip_reg[None,...],p['Nt'],axis=0)
+    slip_reg = np.repeat(slip_reg[...,None],p['Ds'],axis=-1)
+
+  if slip_model == 'stochastic':
+    slip_reg = np.repeat(slip_reg[...,None],p['Ds'],axis=-1)
 
   f['slip'] = slip_reg
 
@@ -95,23 +100,94 @@ def create_formatted_regularization(params,p):
 
   return f
 
-def create_regularization(reg,p):
-  reg_matrix = np.zeros((0,p['total']))
-  for i,v in reg.iteritems():
-    if len(np.shape(v)) == 3:
-      for j in range(np.shape(v)[2]):
-        r1 = v[:,:,j]
+
+def _create_regularization(params,p,slip_model='stochastic'):
+  reg = create_formatted_regularization(params,p,slip_model=slip_model)
+  if slip_model == 'stochastic':
+    reg_matrix = np.zeros((0,p['total']))
+    for i,v in reg.iteritems():
+      if i == 'slip':
+        for j in range(p['Ds']):
+          r1 = v[:,:,j]
+          r2 = np.zeros((len(r1),p['total']))
+          r2[:,p[i][:,j]] = r1
+          reg_matrix = np.vstack((reg_matrix,r2))
+
+      else:
+        r1 = v[:,:]
         r2 = np.zeros((len(r1),p['total']))
-        r2[:,p[i][:,j]] = r1
+        r2[:,p[i]] = r1
         reg_matrix = np.vstack((reg_matrix,r2))
 
-    else:
-      r1 = v[:,:]
-      r2 = np.zeros((len(r1),p['total']))
-      r2[:,p[i]] = r1
-      reg_matrix = np.vstack((reg_matrix,r2))
+  if slip_model == 'parameterized':
+    reg_matrix = np.zeros((0,p['total']))
+    for i,v in reg.iteritems():
+      if i == 'slip':
+        for t in range(p['Nt']):
+          for j in range(p['Ds']):
+            r1 = v[t,:,:,j]
+            r2 = np.zeros((len(r1),p['total']))
+            r2[:,p[i][t,:,j]] = r1
+            reg_matrix = np.vstack((reg_matrix,r2))
+
+      else:
+        r1 = v[:,:]
+        r2 = np.zeros((len(r1),p['total']))
+        r2[:,p[i]] = r1
+        reg_matrix = np.vstack((reg_matrix,r2))
 
   return reg_matrix
+
+def create_regularization(params,p,slip_model='stochastic'):
+  Nlength = basis.FAULT_NLENGTH
+  Nwidth = basis.FAULT_NWIDTH
+  slipC = np.zeros((0,0),dtype=int)
+  count = 0
+  reg = np.zeros((0,p['total']))
+
+  # form connectivity matrix for slip
+  for i,(l,w) in enumerate(zip(Nlength,Nwidth)):
+    Ci = np.arange(count,count+l*w).reshape((l,w))
+    Ci = Ci[::-1,:]
+    if i == (len(Nlength)-1):
+      slipC = modest.pad(slipC,(slipC.shape[0]+1,slipC.shape[1]),value=-1)
+
+    slipC = modest.pad_stack((slipC,Ci),value=-1,axis=0)
+    count += l*w
+
+  import matplotlib.pyplot as plt
+  plt.pcolor(slipC)
+  plt.show()  
+  # append slip regularization matrices to main reg matrix
+  for j in range(p['Ds']):
+    for i in range(p['Nst']):
+      slip_indices = p['slip'][i,:,j]
+      slip_indices = np.hstack((slip_indices,-1))
+      con = slip_indices[slipC]
+      regi = modest.tikhonov.tikhonov_matrix(
+               con,
+               params['slip_regularization_order'],
+               column_no=p['total'])
+
+      regi *= params['slip_regularization']
+      reg = np.vstack((reg,regi))
+
+  # form fluidity connectivity  
+  Nthickness = basis.FLUIDITY_NTHICKNESS
+  fluC = np.arange(Nthickness,dtype=int)
+  con = p['fluidity'][fluC] 
+  # form fluidity regularization
+  regi = modest.tikhonov.tikhonov_matrix(
+           con,
+           params['fluidity_regularization_order'],
+           column_no=p['total'])
+
+  regi *= params['fluidity_regularization']
+  # append to main
+  reg = np.vstack((reg,regi))
+
+  return reg
+
 
 
   

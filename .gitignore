@@ -3,6 +3,11 @@ example/Synthetic/work
 example/Synthetic/history.h5
 example/Synthetic/gf
 example/Synthetic/data
-example/Synthetic/out.h5
+example/SyntheticParameterized/out.h5
+example/SyntheticParameterized/work
+example/SyntheticParameterized/history.h5
+example/SyntheticParameterized/gf
+example/SyntheticParameterized/data
+example/SyntheticParameterized/out.h5
 *~
 *.pyc

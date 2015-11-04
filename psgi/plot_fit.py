@@ -22,9 +22,10 @@ def quiver_args(position,disp_array,cov_array=None,mask=None):
   v[mask] = 0.0
 
   if cov_array is not None:
-    var_u = cov_array[:,0,0]
-    var_v = cov_array[:,1,1]
-    cov_uv = cov_array[:,0,1]
+    var_u = cov_array[:,0]
+    var_v = cov_array[:,1]
+    #cov_uv = cov_array[:,0,1]
+    cov_uv = 0*var_u
     var_u[mask] = 1e-8
     var_v[mask] = 1e-8
     cov_uv[mask] = 1e-8
@@ -150,7 +151,7 @@ def _view(displacement_list,
     position = np.array(position).transpose()
     main_ax.patch.set_facecolor([0.0,0.0,1.0,0.2])
     basemap.drawtopography(ax=main_ax,vmin=-6000,vmax=4000,
-                         alpha=1.0,resolution=map_resolution,zorder=0)
+                           alpha=1.0,resolution=map_resolution,zorder=0)
     basemap.drawcoastlines(ax=main_ax,linewidth=1.5,zorder=1)
     basemap.drawcountries(ax=main_ax,linewidth=1.5,zorder=1)
     basemap.drawstates(ax=main_ax,linewidth=1,zorder=1)
@@ -194,7 +195,7 @@ def _view(displacement_list,
     if covariance_list[idx] is not None:
       args = quiver_args(position,
                          displacement_list[idx][time_idx,:,:],
-                         covariance_list[idx][time_idx,:,:,:],
+                         covariance_list[idx][time_idx,:,:],
                          mask[idx][time_idx,:])
 
       Q_lst += [main_ax.quiver(args[0],args[1],args[2],args[3],sigma=args[4],
@@ -252,7 +253,7 @@ def _view(displacement_list,
       if covariance_list[idx] is not None:      
         args = quiver_args(position,
                            displacement_list[idx][time_idx,:,:],
-                           covariance_list[idx][time_idx,:,:,:],
+                           covariance_list[idx][time_idx,:,:],
                            mask[idx][time_idx,:])
     
         Q_lst[idx].set_UVC(args[2],args[3],sigma=args[4])
@@ -275,19 +276,19 @@ def _view(displacement_list,
     for i in range(N):
       midx = mask[i][:,idx]  
       disp = displacement_list[i][:,idx,:]
-      cov = covariance_list[i][:,idx,:,:]
+      cov = covariance_list[i][:,idx,:]
       if i == 0:
         sub_ax1.errorbar(times[~midx],
                          disp[~midx,0], 
-                         np.sqrt(cov[~midx,0,0]),
+                         np.sqrt(cov[~midx,0]),
                          color=colors[i],capsize=0,fmt='.')
         sub_ax2.errorbar(times[~midx],
                          disp[~midx,1], 
-                         np.sqrt(cov[~midx,1,1]),
+                         np.sqrt(cov[~midx,1]),
                          color=colors[i],capsize=0,fmt='.')
         sub_ax3.errorbar(times[~midx],
                          disp[~midx,2], 
-                         np.sqrt(cov[~midx,2,2]),
+                         np.sqrt(cov[~midx,2]),
                          color=colors[i],capsize=0,fmt='.')
       else:
         sub_ax1.plot(times[~midx],

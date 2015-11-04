@@ -9,6 +9,7 @@ from traits.api import HasTraits, Range, Instance, on_trait_change, Array
 from traitsui.api import View, Item, Group
 from mayavi.core.api import PipelineBase
 from mayavi.core.ui.api import MayaviScene, SceneEditor,MlabSceneModel
+import tplot.topo
 import mayavi.mlab
 import modest
 import numpy as np
@@ -76,19 +77,19 @@ def view(state,param):
   fault_transforms = basis.FAULT_TRANSFORMS
 
   xs1 = XSection(basis.fluidity,
-                f_args=(np.exp(state['fluidity'][-1]),),
+                 f_args=(state['fluidity'][-1],),
                 base_square_y=(-1,0),
                 transforms = fluidity_transforms,
                  clim = param['fluidity_clim'])
 
   xs2 = XSection(basis.fluidity,
-                f_args=(np.exp(state['fluidity'][-1]),),
+                f_args=(state['fluidity'][-1],),
                 base_square_y=(-1,0),
                 transforms = fault_transforms)
 
   class InteractiveSlip(HasTraits):
     #time_index = Range(0,len(state['slip']),0.5)
-    print(state)
+    #print(state)
     time = Range(round(min(state['time']),2),round(max(state['time']),2))
     scene = Instance(MlabSceneModel,())
     view = View(Item('scene',editor=SceneEditor(scene_class=MayaviScene),
@@ -96,8 +97,9 @@ def view(state,param):
                 Group('time'),resizable=True)
 
     def __init__(self):
+      #tplot.topo.draw_topography(bm,opacity=0.2)
       time_index = np.argmin(abs(state['time'][...] - self.time))
-      slip = np.array(state['slip_derivative'][time_index])
+      slip = np.array(state[str(param['slip_type'])][time_index])
       self.xs = ()
       self.vxs = ()
       for i,t in enumerate(fault_transforms):
@@ -114,7 +116,7 @@ def view(state,param):
     @on_trait_change('time,scene.activated')
     def update_plot(self):
       time_index = np.argmin(abs(state['time'][...] - self.time))
-      slip = np.array(state['slip_derivative'][time_index])
+      slip = np.array(state[str(param['slip_type'])][time_index])
       for i,t in enumerate(fault_transforms):
         self.xs[i].set_f_args((slip,i))
         self.vxs[i].set_f_args((slip,basis.FAULT_STRIKE[i],basis.FAULT_DIP[i],i))
@@ -127,10 +129,13 @@ def view(state,param):
         else:
           self.vxs[i].redraw()   
 
+      #tplot.topo.draw_topography(bm,opacity=0.2) 
+
   mayavi.mlab.figure(1)
   xs1.draw()
   xs2.draw(color=(0.2,0.2,0.2),opacity=0.5)
-
+  tplot.topo.draw_topography(bm,opacity=0.2)
   #mayavi.mlab.figure(2)
   xs2 = InteractiveSlip()
   xs2.configure_traits()
+

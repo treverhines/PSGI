@@ -11,15 +11,17 @@ import psgi.plot_state
 p = argparse.ArgumentParser(
       description='plots the data and best fit data found from PSGI')
 
+p.add_argument('--file',type=str)
 p.add_argument('--quiver_scale',type=float,default=0.01)
 p.add_argument('--scale_length',type=float,default=0.1)
 p.add_argument('--draw_map',type=bool,default=True)
 p.add_argument('--slip_clim',type=float,nargs=2,default=[0.0,6.0])
+p.add_argument('--slip_type',type=str,default='slip')
 p.add_argument('--fluidity_clim',type=float,nargs=2,default=[0.0,0.5])
 
 param = vars(p.parse_args())
 
-data_file = h5py.File('out.h5','r')
+data_file = h5py.File(param['file'],'r')
 state = data_file['state']
 psgi.plot_state.view(state,param)
 
