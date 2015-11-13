@@ -1,0 +1,182 @@
+11/12/2015 23:02:53 PSGI: [INFO] arguments: 
+    slip_model:               parameterized
+    verbose:                  1
+    maxitr:                   10
+    time_blocks:              1
+    greens_functions:         greens_functions.h5
+    initial_slip_variance:    1000.0
+    _afterslip_start_times:   [2010.0, 2010.5]
+    regularization:           regularization.h5
+    _afterslip_end_times:     [2010.5, 2011.0]
+    afterslip_start_times:    [2010.0, 2010.5, 2011.0, 2011.5, 2012.0, 2012.5, 2013.0, 2013.5, 2014.0, 2014.5, 2015.0, 2015.5, 2016.0, 2016.5, 2017.0, 2017.5, 2018.0, 2018.5, 2019.0, 2019.5]
+    slip_regularization_order: 0
+    secular_velocity_variance: 1000000.0
+    initial_slip_mean:        0.0
+    fluidity_regularization:  100.0
+    slip_regularization:      10.0
+    coseismic_times:          [2009.99]
+    gf_file:                  greens_functions.h5
+    data:                     data.h5
+    baseline_displacement_mean: 0.0
+    secular_velocity_mean:    0.0
+    out_file:                 out.h5
+    solver:                   dgs
+    data_file:                data.h5
+    baseline_displacement_variance: 1000.0
+    fluidity_mean:            0.0
+    fluidity_variance:        1000.0
+    afterslip_end_times:      [2010.5, 2011.0, 2011.5, 2012.0, 2012.5, 2013.0, 2013.5, 2014.0, 2014.5, 2015.0, 2015.5, 2016.0, 2016.5, 2017.0, 2017.5, 2018.0, 2018.5, 2019.0, 2019.5, 2020.0]
+    fluidity_regularization_order: 0
+11/12/2015 23:02:53 timing: [DEBUG] timing main
+11/12/2015 23:02:53 timing: [DEBUG] timing tikhonov_matrix
+11/12/2015 23:02:53 timing: [DEBUG] elapsed time for last call to tikhonov_matrix: 16.25 ms
+11/12/2015 23:02:53 timing: [DEBUG] timing tikhonov_matrix
+11/12/2015 23:02:53 timing: [DEBUG] elapsed time for last call to tikhonov_matrix: 15.82 ms
+11/12/2015 23:02:53 timing: [DEBUG] timing tikhonov_matrix
+11/12/2015 23:02:53 timing: [DEBUG] elapsed time for last call to tikhonov_matrix: 23 ms
+11/12/2015 23:02:53 timing: [DEBUG] timing tikhonov_matrix
+11/12/2015 23:02:53 timing: [DEBUG] elapsed time for last call to tikhonov_matrix: 21.14 ms
+11/12/2015 23:02:53 timing: [DEBUG] timing tikhonov_matrix
+11/12/2015 23:02:53 timing: [DEBUG] elapsed time for last call to tikhonov_matrix: 21.58 ms
+11/12/2015 23:02:53 timing: [DEBUG] timing tikhonov_matrix
+11/12/2015 23:02:53 timing: [DEBUG] elapsed time for last call to tikhonov_matrix: 20.79 ms
+11/12/2015 23:02:53 timing: [DEBUG] timing tikhonov_matrix
+11/12/2015 23:02:54 timing: [DEBUG] elapsed time for last call to tikhonov_matrix: 22.95 ms
+11/12/2015 23:02:54 timing: [DEBUG] timing tikhonov_matrix
+11/12/2015 23:02:54 timing: [DEBUG] elapsed time for last call to tikhonov_matrix: 21.43 ms
+11/12/2015 23:02:54 timing: [DEBUG] timing tikhonov_matrix
+11/12/2015 23:02:54 timing: [DEBUG] elapsed time for last call to tikhonov_matrix: 20.96 ms
+11/12/2015 23:02:54 timing: [DEBUG] timing tikhonov_matrix
+11/12/2015 23:02:54 timing: [DEBUG] elapsed time for last call to tikhonov_matrix: 21.07 ms
+11/12/2015 23:02:54 timing: [DEBUG] timing tikhonov_matrix
+11/12/2015 23:02:54 timing: [DEBUG] elapsed time for last call to tikhonov_matrix: 20.83 ms
+11/12/2015 23:02:54 timing: [DEBUG] timing tikhonov_matrix
+11/12/2015 23:02:54 timing: [DEBUG] elapsed time for last call to tikhonov_matrix: 20.97 ms
+11/12/2015 23:02:54 timing: [DEBUG] timing tikhonov_matrix
+11/12/2015 23:02:54 timing: [DEBUG] elapsed time for last call to tikhonov_matrix: 21.21 ms
+11/12/2015 23:02:54 timing: [DEBUG] timing tikhonov_matrix
+11/12/2015 23:02:54 timing: [DEBUG] elapsed time for last call to tikhonov_matrix: 20.82 ms
+11/12/2015 23:02:54 timing: [DEBUG] timing tikhonov_matrix
+11/12/2015 23:02:54 timing: [DEBUG] elapsed time for last call to tikhonov_matrix: 21.05 ms
+11/12/2015 23:02:54 timing: [DEBUG] timing tikhonov_matrix
+11/12/2015 23:02:54 timing: [DEBUG] elapsed time for last call to tikhonov_matrix: 21.15 ms
+11/12/2015 23:02:54 timing: [DEBUG] timing tikhonov_matrix
+11/12/2015 23:02:54 timing: [DEBUG] elapsed time for last call to tikhonov_matrix: 20.8 ms
+11/12/2015 23:02:54 timing: [DEBUG] timing tikhonov_matrix
+11/12/2015 23:02:54 timing: [DEBUG] elapsed time for last call to tikhonov_matrix: 20.85 ms
+11/12/2015 23:02:54 timing: [DEBUG] timing tikhonov_matrix
+11/12/2015 23:02:54 timing: [DEBUG] elapsed time for last call to tikhonov_matrix: 21.28 ms
+11/12/2015 23:02:54 timing: [DEBUG] timing tikhonov_matrix
+11/12/2015 23:02:54 timing: [DEBUG] elapsed time for last call to tikhonov_matrix: 20.97 ms
+11/12/2015 23:02:54 timing: [DEBUG] timing tikhonov_matrix
+11/12/2015 23:02:54 timing: [DEBUG] elapsed time for last call to tikhonov_matrix: 20.91 ms
+11/12/2015 23:02:54 timing: [DEBUG] timing tikhonov_matrix
+11/12/2015 23:02:54 timing: [DEBUG] elapsed time for last call to tikhonov_matrix: 21.24 ms
+11/12/2015 23:02:54 timing: [DEBUG] timing tikhonov_matrix
+11/12/2015 23:02:54 timing: [DEBUG] elapsed time for last call to tikhonov_matrix: 21.5 ms
+11/12/2015 23:02:54 timing: [DEBUG] timing tikhonov_matrix
+11/12/2015 23:02:54 timing: [DEBUG] elapsed time for last call to tikhonov_matrix: 21.35 ms
+11/12/2015 23:02:54 timing: [DEBUG] timing tikhonov_matrix
+11/12/2015 23:02:54 timing: [DEBUG] elapsed time for last call to tikhonov_matrix: 21.19 ms
+11/12/2015 23:02:54 timing: [DEBUG] timing tikhonov_matrix
+11/12/2015 23:02:54 timing: [DEBUG] elapsed time for last call to tikhonov_matrix: 21.97 ms
+11/12/2015 23:02:54 timing: [DEBUG] timing tikhonov_matrix
+11/12/2015 23:02:54 timing: [DEBUG] elapsed time for last call to tikhonov_matrix: 21.04 ms
+11/12/2015 23:02:54 timing: [DEBUG] timing tikhonov_matrix
+11/12/2015 23:02:54 timing: [DEBUG] elapsed time for last call to tikhonov_matrix: 21.09 ms
+11/12/2015 23:02:54 timing: [DEBUG] timing tikhonov_matrix
+11/12/2015 23:02:54 timing: [DEBUG] elapsed time for last call to tikhonov_matrix: 21.2 ms
+11/12/2015 23:02:54 timing: [DEBUG] timing tikhonov_matrix
+11/12/2015 23:02:54 timing: [DEBUG] elapsed time for last call to tikhonov_matrix: 21.09 ms
+11/12/2015 23:02:54 timing: [DEBUG] timing tikhonov_matrix
+11/12/2015 23:02:54 timing: [DEBUG] elapsed time for last call to tikhonov_matrix: 21.25 ms
+11/12/2015 23:02:54 timing: [DEBUG] timing tikhonov_matrix
+11/12/2015 23:02:54 timing: [DEBUG] elapsed time for last call to tikhonov_matrix: 21.61 ms
+11/12/2015 23:02:54 timing: [DEBUG] timing tikhonov_matrix
+11/12/2015 23:02:54 timing: [DEBUG] elapsed time for last call to tikhonov_matrix: 20.95 ms
+11/12/2015 23:02:54 timing: [DEBUG] timing tikhonov_matrix
+11/12/2015 23:02:54 timing: [DEBUG] elapsed time for last call to tikhonov_matrix: 21.16 ms
+11/12/2015 23:02:54 timing: [DEBUG] timing tikhonov_matrix
+11/12/2015 23:02:54 timing: [DEBUG] elapsed time for last call to tikhonov_matrix: 21.81 ms
+11/12/2015 23:02:54 timing: [DEBUG] timing tikhonov_matrix
+11/12/2015 23:02:54 timing: [DEBUG] elapsed time for last call to tikhonov_matrix: 20.98 ms
+11/12/2015 23:02:54 timing: [DEBUG] timing tikhonov_matrix
+11/12/2015 23:02:54 timing: [DEBUG] elapsed time for last call to tikhonov_matrix: 21.19 ms
+11/12/2015 23:02:54 timing: [DEBUG] timing tikhonov_matrix
+11/12/2015 23:02:54 timing: [DEBUG] elapsed time for last call to tikhonov_matrix: 20.91 ms
+11/12/2015 23:02:54 timing: [DEBUG] timing tikhonov_matrix
+11/12/2015 23:02:54 timing: [DEBUG] elapsed time for last call to tikhonov_matrix: 21.02 ms
+11/12/2015 23:02:54 timing: [DEBUG] timing tikhonov_matrix
+11/12/2015 23:02:54 timing: [DEBUG] elapsed time for last call to tikhonov_matrix: 21.43 ms
+11/12/2015 23:02:54 timing: [DEBUG] timing tikhonov_matrix
+11/12/2015 23:02:54 timing: [DEBUG] elapsed time for last call to tikhonov_matrix: 21.5 ms
+11/12/2015 23:02:54 timing: [DEBUG] timing tikhonov_matrix
+11/12/2015 23:02:54 timing: [DEBUG] elapsed time for last call to tikhonov_matrix: 21.1 ms
+11/12/2015 23:02:54 timing: [DEBUG] timing tikhonov_matrix
+11/12/2015 23:02:54 timing: [DEBUG] elapsed time for last call to tikhonov_matrix: 21.44 ms
+11/12/2015 23:02:54 timing: [DEBUG] timing nonlin_lstsq
+11/12/2015 23:02:54 timing: [DEBUG] timing _arg_parser
+11/12/2015 23:02:54 timing: [DEBUG] elapsed time for last call to _arg_parser: 59.23 ms
+11/12/2015 23:02:54 nllstsq: [DEBUG] error at iteration 0: 0.0
+11/12/2015 23:02:54 nllstsq: [INFO] converged to atol: error 0.0
+11/12/2015 23:02:56 timing: [DEBUG] elapsed time for last call to nonlin_lstsq: 1.843 s
+11/12/2015 23:02:56 timing: [DEBUG] timing nonlin_lstsq
+11/12/2015 23:02:56 timing: [DEBUG] timing _arg_parser
+11/12/2015 23:02:56 timing: [DEBUG] elapsed time for last call to _arg_parser: 37.83 ms
+11/12/2015 23:02:56 timing: [DEBUG] timing observation_jacobian
+11/12/2015 23:02:59 timing: [DEBUG] elapsed time for last call to observation_jacobian: 3.181 s
+11/12/2015 23:03:00 timing: [DEBUG] timing observation
+11/12/2015 23:03:01 timing: [DEBUG] elapsed time for last call to observation: 454 ms
+11/12/2015 23:03:01 nllstsq: [DEBUG] error at iteration 0: 35920.1097971
+11/12/2015 23:03:01 timing: [DEBUG] timing dgs
+11/12/2015 23:03:08 timing: [DEBUG] elapsed time for last call to dgs: 6.841 s
+11/12/2015 23:03:08 timing: [DEBUG] timing observation
+11/12/2015 23:03:09 timing: [DEBUG] elapsed time for last call to observation: 451.6 ms
+11/12/2015 23:03:09 nllstsq: [DEBUG] error at iteration 1: 312.135439972
+11/12/2015 23:03:09 timing: [DEBUG] timing observation
+11/12/2015 23:03:09 timing: [DEBUG] elapsed time for last call to observation: 449.3 ms
+11/12/2015 23:03:09 timing: [DEBUG] timing observation_jacobian
+11/12/2015 23:03:12 timing: [DEBUG] elapsed time for last call to observation_jacobian: 3.186 s
+11/12/2015 23:03:13 timing: [DEBUG] timing dgs
+11/12/2015 23:03:20 timing: [DEBUG] elapsed time for last call to dgs: 6.889 s
+11/12/2015 23:03:20 timing: [DEBUG] timing observation
+11/12/2015 23:03:21 timing: [DEBUG] elapsed time for last call to observation: 454.2 ms
+11/12/2015 23:03:21 nllstsq: [DEBUG] error at iteration 2: 298.316012857
+11/12/2015 23:03:21 timing: [DEBUG] timing observation
+11/12/2015 23:03:21 timing: [DEBUG] elapsed time for last call to observation: 452.2 ms
+11/12/2015 23:03:21 timing: [DEBUG] timing observation_jacobian
+11/12/2015 23:03:24 timing: [DEBUG] elapsed time for last call to observation_jacobian: 3.187 s
+11/12/2015 23:03:25 timing: [DEBUG] timing dgs
+11/12/2015 23:03:32 timing: [DEBUG] elapsed time for last call to dgs: 6.786 s
+11/12/2015 23:03:32 timing: [DEBUG] timing observation
+11/12/2015 23:03:33 timing: [DEBUG] elapsed time for last call to observation: 456 ms
+11/12/2015 23:03:33 nllstsq: [DEBUG] error at iteration 3: 293.596708602
+11/12/2015 23:03:33 timing: [DEBUG] timing observation
+11/12/2015 23:03:33 timing: [DEBUG] elapsed time for last call to observation: 449.4 ms
+11/12/2015 23:03:33 timing: [DEBUG] timing observation_jacobian
+11/12/2015 23:03:36 timing: [DEBUG] elapsed time for last call to observation_jacobian: 3.184 s
+11/12/2015 23:03:37 timing: [DEBUG] timing dgs
+11/12/2015 23:03:50 timing: [DEBUG] elapsed time for last call to dgs: 12.26 s
+11/12/2015 23:03:50 timing: [DEBUG] timing observation
+11/12/2015 23:03:50 timing: [DEBUG] elapsed time for last call to observation: 453.6 ms
+11/12/2015 23:03:50 nllstsq: [DEBUG] error at iteration 4: 293.596659072
+11/12/2015 23:03:50 timing: [DEBUG] timing observation
+11/12/2015 23:03:50 timing: [DEBUG] elapsed time for last call to observation: 451.2 ms
+11/12/2015 23:03:50 timing: [DEBUG] timing observation_jacobian
+11/12/2015 23:03:54 timing: [DEBUG] elapsed time for last call to observation_jacobian: 3.182 s
+11/12/2015 23:03:55 nllstsq: [INFO] converged to rtol: error 293.596659072
+11/12/2015 23:04:06 timing: [DEBUG] elapsed time for last call to nonlin_lstsq: 1.164 min
+11/12/2015 23:04:07 parameterized: [INFO] computing predicted data
+11/12/2015 23:04:09 parameterized: [INFO] total RMSE: 1.70852824518
+11/12/2015 23:04:09 timing: [DEBUG] elapsed time for last call to main: 1.268 min
+11/12/2015 23:04:09 PSGI: [INFO] output saved to out.h5
+11/12/2015 23:04:09 timing: [DEBUG] elapsed time for last call to PSGI: 1.269 min
+11/12/2015 23:04:09 timing: [INFO] ---- TIME SUMMARY ----
+11/12/2015 23:04:09 timing: [INFO] total time running PSGI: 1.269 min
+11/12/2015 23:04:09 timing: [INFO] total time running main: 1.268 min
+11/12/2015 23:04:09 timing: [INFO] total time running tikhonov_matrix: 903.9 ms
+11/12/2015 23:04:09 timing: [INFO] total time running nonlin_lstsq: 1.195 min
+11/12/2015 23:04:09 timing: [INFO] total time running _arg_parser: 97.07 ms
+11/12/2015 23:04:09 timing: [INFO] total time running observation_jacobian: 15.92 s
+11/12/2015 23:04:09 timing: [INFO] total time running observation: 4.071 s
+11/12/2015 23:04:09 timing: [INFO] total time running dgs: 32.78 s

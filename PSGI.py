@@ -57,9 +57,10 @@ formatter = logging.Formatter(
               '%m/%d/%Y %H:%M:%S')
 stream_handler = logging.StreamHandler(sys.stdout)
 stream_handler.setFormatter(formatter)
-file_handler = logging.FileHandler('log','w')
+file_handler = logging.FileHandler('%s.log' % config['out_file'],'w')
 file_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
+logger.addHandler(file_handler)
 
 if config['verbose'] >= 1:
   logger.setLevel(logging.DEBUG)

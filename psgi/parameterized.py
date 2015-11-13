@@ -3,14 +3,15 @@ from __future__ import division
 import numpy as np
 import modest
 import logging
-import h5py
 import scipy
 import prior
 import reg
+import multiprocessing as mp
 from slip import steps_and_ramps
 from modest import funtime
 
 logger = logging.getLogger(__name__)
+
 
 def state_parser(Nst,Ns,Ds,Nv,Nx,Dx):
   out = {}
@@ -47,8 +48,7 @@ def flat_cov(cov):
   return cov_flat
 
 
-@funtime
-def observation_t(X,t,F,G,p,slip_func,flatten=True):
+def observation_t(X,t,F,G,p,slip_func):
   '''
   X: state vector
   t: time scalar
@@ -61,22 +61,23 @@ def observation_t(X,t,F,G,p,slip_func,flatten=True):
   visc = np.einsum('ij,k,ijklm',b_int,X[p['fluidity']],G)
   tect = (X[p['secular_velocity']]*t + X[p['baseline_displacement']])
   out = tect + slip + visc
-  if flatten:
-    out = flat_data(out)
 
   return out
 
-def observation(X,t_list,F,G,p,slip_func,flatten=True):
-  out = np.zeros((len(t_list),p['Nx'],p['Dx']))
-  for i,t in enumerate(t_list):
-    out[i,:,:] = observation_t(X,t,F,G,p,slip_func,flatten=False)
-
-  if flatten:
-    out = flat_data(out)
-
-  return out
 
 @funtime
+def observation(X,t_list,F,G,p,slip_func,mask):
+  cnt = 0
+  obs = np.sum(~mask)
+  out = np.empty(obs)
+  for i,t in enumerate(t_list):
+    new_obs = np.sum(~mask[i])
+    out_t = observation_t(X,t,F,G,p,slip_func)
+    out[cnt:cnt+new_obs] = out_t[~mask[i]]
+    cnt += new_obs
+
+  return out
+
 def observation_jacobian_t(X,t,F,G,p,slip_func,slip_jac):
   F = np.einsum('ijkl->klij',F)
   # change G from slip_patch,slip_dir,visc,disp,disp_dir to 
@@ -99,16 +100,20 @@ def observation_jacobian_t(X,t,F,G,p,slip_func,slip_jac):
   jac[:,:,p['fluidity']] = np.einsum('ij...lm,lm->ij...',
                                      G,b_int)
 
-  jac = np.reshape(jac,(p['Nx']*p['Dx'],p['total']))   
   return jac
 
 
-def observation_jacobian(X,t_list,F,G,p,slip_func,slip_jac):
-  out = np.zeros((len(t_list),p['Nx']*p['Dx'],p['total']))
+@funtime
+def observation_jacobian(X,t_list,F,G,p,slip_func,slip_jac,mask):
+  cnt = 0
+  obs = np.sum(~mask)
+  out = np.empty((obs,p['total']))
   for i,t in enumerate(t_list):
-    out[i,:,:] = observation_jacobian_t(X,t,F,G,p,slip_func,slip_jac)
+    new_obs = np.sum(~mask[i])
+    out_t = observation_jacobian_t(X,t,F,G,p,slip_func,slip_jac)
+    out[cnt:cnt+new_obs] = out_t[~mask[i]]
+    cnt += new_obs
 
-  out = out.reshape((len(t_list)*p['Nx']*p['Dx'],p['total']))
   return out
 
 
@@ -122,13 +127,94 @@ def regularization_jacobian(X,reg_matrix):
 
 
 def L2(residual,covariance,mask):
-  residual = flat_data([residual[~mask,:]])
-  covariance = flat_data([covariance[~mask,:]])
-  #covariance = flat_cov([covariance[~mask,:,:]])
+  residual = flat_data([residual[~mask]])
+  covariance = flat_data([covariance[~mask]])
   return np.sum(residual**2/covariance)
-  #covinv = np.linalg.inv(covariance)
-  #L2 = np.einsum('i,ij,j',residual,covinv,residual)
-  #return L2
+
+
+def setup_output_file(outfile,p,name,position,time): 
+  arr = np.ones((len(time),p['Nx'],p['Dx']))
+  mask = np.zeros((len(time),p['Nx']),dtype=bool)
+  outfile.create_dataset('data/mean',
+                         data=arr)
+  outfile.create_dataset('data/mask',
+                         data=mask)
+  outfile.create_dataset('data/covariance',
+                         data=1e-10*arr)
+  outfile.create_dataset('data/position',
+                         data=position)
+  outfile.create_dataset('data/time',
+                         data=time)
+  outfile.create_dataset('data/name',
+                         data=name)
+
+  outfile.create_dataset('predicted/mean',
+                         data=arr)
+  outfile.create_dataset('predicted/mask',
+                         data=mask)
+  outfile.create_dataset('predicted/covariance',
+                         data=1e-10*arr)
+  outfile.create_dataset('predicted/position',
+                         data=position)
+  outfile.create_dataset('predicted/time',
+                         data=time)
+  outfile.create_dataset('predicted/name',
+                         data=name)
+
+  outfile.create_dataset('tectonic/mean',
+                         data=arr)
+  outfile.create_dataset('tectonic/mask',
+                         data=mask)
+  outfile.create_dataset('tectonic/covariance',
+                         data=1e-10*arr)
+  outfile.create_dataset('tectonic/position',
+                         data=position)
+  outfile.create_dataset('tectonic/time',
+                         data=time)
+  outfile.create_dataset('tectonic/name',
+                         data=name)
+
+  outfile.create_dataset('elastic/mean',
+                         data=arr)
+  outfile.create_dataset('elastic/mask',
+                         data=mask)
+  outfile.create_dataset('elastic/covariance',
+                         data=1e-10*arr)
+  outfile.create_dataset('elastic/position',
+                         data=position)
+  outfile.create_dataset('elastic/time',
+                         data=time)
+  outfile.create_dataset('elastic/name',
+                         data=name)
+
+  outfile.create_dataset('viscous/mean',
+                         data=arr)
+  outfile.create_dataset('viscous/mask',
+                         data=mask)
+  outfile.create_dataset('viscous/covariance',
+                         data=1e-10*arr)
+  outfile.create_dataset('viscous/position',
+                         data=position)
+  outfile.create_dataset('viscous/time',
+                         data=time)
+  outfile.create_dataset('viscous/name',
+                         data=name)
+
+  outfile.create_dataset('state/all',
+                         shape=(len(time),p['total']))
+  outfile.create_dataset('state/baseline_displacement',
+                         shape=(len(time),)+np.shape(p['baseline_displacement']))    
+  outfile.create_dataset('state/secular_velocity',
+                         shape=(len(time),)+np.shape(p['secular_velocity']))    
+  outfile.create_dataset('state/slip',
+                         shape=(len(time),)+np.shape(p['slip'])[1:])    
+  outfile.create_dataset('state/slip_derivative',
+                         shape=(len(time),)+np.shape(p['slip'])[1:])    
+  outfile.create_dataset('state/fluidity',
+                         shape=(len(time),)+np.shape(p['fluidity']))    
+  outfile.create_dataset('state/time',
+                         data=time)  
+  return
 
 
 @funtime
@@ -202,7 +288,7 @@ def main(data,gf,param,outfile):
   
   # check for consistency between input
   assert np.shape(data['mean']) == (Nt,Nx,Dx)
-  assert np.shape(data['covariance']) == (Nt,Nx,Dx)
+  assert np.shape(data['variance']) == (Nt,Nx,Dx)
   assert np.shape(F) == (Ns,Ds,Nx,Dx)
   assert np.shape(G) == (Ns,Ds,Nv,Nx,Dx)
   p = state_parser(Nst,Ns,Ds,Nv,Nx,Dx)
@@ -222,67 +308,36 @@ def main(data,gf,param,outfile):
     solver_args = (lower_bound,upper_bound)
     solver_kwargs = {}
 
-  elif param['solver'] == 'lstsq':
+  if param['solver'] == 'lstsq':
     solver = modest.lstsq
     solver_args = ()
-    solver_kwargs = {'overwrite_a':True,'overwrite_b':True}
+    solver_kwargs = {}
 
+  elif param['solver'] == 'lsmr':
+    solver = modest.lsmr
+    solver_args = ()
+    solver_kwargs = {}
+
+  elif param['solver'] == 'lgmres':
+    solver = modest.lgmres
+    solver_args = ()
+    solver_kwargs = {'tol':1e-8,'maxiter':1000}
+
+  elif param['solver'] == 'dgs':
+    solver = modest.dgs
+    solver_args = ()
+    solver_kwargs = {}
 
   #fprior = prior.create_formatted_prior(param,p,slip_model='parameterized')
   Xprior,Cprior = prior.create_prior(param,p,slip_model='parameterized')   
   reg_matrix = reg.create_regularization(param,p,slip_model='parameterized')
   reg_rows = len(reg_matrix)  
-   
-  # copy over data file 
-  outfile.create_dataset('data/mean',shape=np.shape(data['mean']))
-  outfile.create_dataset('data/mask',shape=np.shape(data['mask']),dtype=bool)
-  outfile.create_dataset('data/covariance',shape=np.shape(data['covariance']))
-  outfile['data/name'] = data['name'][...]
-  outfile['data/position'] = data['position'][...]
-  outfile['data/time'] = data['time'][...]
 
-  outfile.create_dataset('predicted/mean',shape=np.shape(data['mean']))
-  outfile.create_dataset('predicted/covariance',data=1e-10*np.ones((Nt,Nx,Dx)))
-  outfile['predicted/name'] = data['name'][...]
-  outfile['predicted/mask'] = np.array(0.0*data['mask'][...],dtype=bool)
-  outfile['predicted/position'] = data['position'][...]
-  outfile['predicted/time'] = data['time'][...]
-
-  outfile.create_dataset('tectonic/mean',shape=np.shape(data['mean']))
-  outfile.create_dataset('tectonic/covariance',data=1e-10*np.ones((Nt,Nx,Dx)))
-  outfile['tectonic/name'] = data['name'][...]
-  outfile['tectonic/mask'] = np.array(0.0*data['mask'][...],dtype=bool)
-  outfile['tectonic/position'] = data['position'][...]
-  outfile['tectonic/time'] = data['time'][...]
-
-  outfile.create_dataset('elastic/mean',shape=np.shape(data['mean']))
-  outfile.create_dataset('elastic/covariance',data=1e-10*np.ones((Nt,Nx,Dx)))
-  outfile['elastic/name'] = data['name'][...]
-  outfile['elastic/mask'] = np.array(0.0*data['mask'][...],dtype=bool)
-  outfile['elastic/position'] = data['position'][...]
-  outfile['elastic/time'] = data['time'][...]
-
-  outfile.create_dataset('viscous/mean',shape=np.shape(data['mean']))
-  outfile.create_dataset('viscous/covariance',data=1e-10*np.ones((Nt,Nx,Dx)))
-  outfile['viscous/name'] = data['name'][...]
-  outfile['viscous/mask'] = np.array(0.0*data['mask'][...],dtype=bool)
-  outfile['viscous/position'] = data['position'][...]
-  outfile['viscous/time'] = data['time'][...]
-
-  # Initiate arrays where solution will be stored
-  outfile.create_dataset('state/all',shape=(Nt,p['total']))
-  outfile.create_dataset('state/baseline_displacement',
-                         shape = (Nt,)+np.shape(p['baseline_displacement']))    
-  outfile.create_dataset('state/secular_velocity',
-                         shape = (Nt,)+np.shape(p['secular_velocity']))    
-  outfile.create_dataset('state/slip',
-                         shape = (Nt,)+np.shape(p['slip'])[1:])    
-  outfile.create_dataset('state/slip_derivative',
-                         shape = (Nt,)+np.shape(p['slip'])[1:])    
-  outfile.create_dataset('state/fluidity',
-                         shape = (Nt,)+np.shape(p['fluidity']))    
-  outfile['state/time'] = data['time'][...]
-
+  setup_output_file(outfile,p,
+                    data['name'][...],
+                    data['position'][...],
+                    data['time'][...])
+  
   Xprior,Cprior = modest.nonlin_lstsq(
                       regularization,
                       np.zeros(reg_rows),
@@ -296,7 +351,7 @@ def main(data,gf,param,outfile):
                       solver=solver, 
                       solver_args=solver_args,
                       solver_kwargs=solver_kwargs,
-                      LM_damping=True,
+                      LM_damping=False,
                       output=['solution','solution_covariance'])
 
   time_indices = range(Nt)
@@ -304,38 +359,43 @@ def main(data,gf,param,outfile):
   for i in block_time_indices:
     outfile['data/mean'][i,...] = data['mean'][i,...]
     outfile['data/mask'][i,...] = data['mask'][i,...]
-    outfile['data/covariance'][i,...] = data['covariance'][i,...]
+    outfile['data/covariance'][i,...] = data['variance'][i,...]
     di = data['mean'][i,...]
-    di = flat_data(di)
-
     di_mask = np.array(data['mask'][i,:],dtype=bool)
     # expand to three dimensions
     di_mask = np.repeat(di_mask[...,None],3,-1)
-    di_mask = flat_data(di_mask) 
+    di = di[~di_mask]
+    print('data: %s' % np.shape(di))
+    #di = flat_data(di)
 
-    Cdi = data['covariance'][i,...]
-    Cdi = flat_data(Cdi)
-    data_indices = np.nonzero(~di_mask)[0]
+    #di_mask = flat_data(di_mask)
 
+    Cdi = data['variance'][i,...]
+    Cdi = Cdi[~di_mask]
+    #Cdi = flat_data(Cdi)
+
+    #data_indices = np.nonzero(~di_mask)[0]
+    #                      data_indices=data_indices,
     Xprior,Cprior = modest.nonlin_lstsq(
                       observation,
                       di,
                       Xprior, 
                       data_covariance=Cdi,
                       prior_covariance=Cprior,
-                      system_args=(time_shifted[i],F,G,p,slip_func),
+                      system_args=(time_shifted[i],F,G,p,slip_func,di_mask),
                       jacobian=observation_jacobian,
-                      jacobian_args=(time_shifted[i],F,G,p,slip_func,slip_jac),
-                      data_indices=data_indices,
+                      jacobian_args=(time_shifted[i],F,G,p,slip_func,slip_jac,di_mask),
                       solver=solver, 
                       solver_args=solver_args,
                       solver_kwargs=solver_kwargs,
                       maxitr=param['maxitr'],
-                      LM_damping=True,
+                      LM_damping=False,
                       LM_param=1.0,
                       rtol=1e-2,
                       atol=1e-2,
                       output=['solution','solution_covariance'])
+
+
 
   post_mean,post_cov = Xprior,Cprior
   for i in range(Nt):
@@ -353,7 +413,7 @@ def main(data,gf,param,outfile):
   for i in range(Nt):
     predicted = observation_t(post_mean,
                               time_shifted[i],
-                              F,G,p,slip_func,flatten=False)
+                              F,G,p,slip_func)
     residual = outfile['data/mean'][i,...] - predicted
     covariance = outfile['data/covariance'][i,...]
     data_mask = np.array(outfile['data/mask'][i,...],dtype=bool)
@@ -370,8 +430,7 @@ def main(data,gf,param,outfile):
                                         mask_post_mean,
                                         time_shifted[i],
                                         F,G,p,
-                                        slip_func,
-                                        flatten=False)
+                                        slip_func)
     mask = np.zeros(p['total'])
     mask[p['slip']] = 1.0
     mask_post_mean = post_mean*mask
@@ -379,8 +438,7 @@ def main(data,gf,param,outfile):
                                        mask_post_mean,
                                        time_shifted[i],
                                        F,G,p,
-                                       slip_func,  
-                                       flatten=False)
+                                       slip_func)
     
     visc = (outfile['predicted/mean'][i,...] - 
             outfile['tectonic/mean'][i,...] - 

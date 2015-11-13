@@ -164,9 +164,6 @@ def create_regularization(params,p,slip_model='stochastic'):
     slipC = modest.pad_stack((slipC,Ci),value=-1,axis=0)
     count += l*w
 
-  import matplotlib.pyplot as plt
-  plt.pcolor(slipC)
-  plt.show()  
   # append slip regularization matrices to main reg matrix
   for j in range(p['Ds']):
     for i in range(p['Nst']):
