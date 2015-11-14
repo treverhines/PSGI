@@ -78,6 +78,7 @@ def observation(X,t_list,F,G,p,slip_func,mask):
 
   return out
 
+
 def observation_jacobian_t(X,t,F,G,p,slip_func,slip_jac):
   F = np.einsum('ijkl->klij',F)
   # change G from slip_patch,slip_dir,visc,disp,disp_dir to 
@@ -127,8 +128,8 @@ def regularization_jacobian(X,reg_matrix):
 
 
 def L2(residual,covariance,mask):
-  residual = flat_data([residual[~mask]])
-  covariance = flat_data([covariance[~mask]])
+  residual = residual[~mask]
+  covariance = covariance[~mask]
   return np.sum(residual**2/covariance)
 
 
@@ -265,7 +266,6 @@ def main(data,gf,param,outfile):
   '''
   F = gf['slip'][...]
   G = gf['fluidity'][...]
-  
   coseismic_times = np.array(param['coseismic_times'])
   afterslip_start_times = param['afterslip_start_times']
   afterslip_end_times = param['afterslip_end_times']
@@ -273,24 +273,46 @@ def main(data,gf,param,outfile):
   afterslip_times = np.array(afterslip_times)
   time = data['time'][:]
 
-  time_shifted = time - np.min(time)
-  coseismic_times_shifted = coseismic_times - np.min(time)
-  afterslip_times_shifted = afterslip_times - np.min(time)
+  slip_scale = 1.0 # meter
+  relax_scale = 1.0 # year
+  time_scale = np.std(time)
+  time_shift = np.mean(time) # years
+  disp_scale = 1.0 # meter
+  # shift is different for each time series
+  disp_shift = np.mean(data['mean'],0)
 
-  slip_func,slip_jac = steps_and_ramps(coseismic_times_shifted,
-                                       afterslip_times_shifted)
+  # scale greens functions
+  # F is originally in meters disp per meter slip
+  F /= disp_scale/slip_scale
+  # G is originally in meters/year disp per meter slip*fluidity 
+  G /= (disp_scale/time_scale)/(slip_scale/relax_scale) 
+  
+  time -= time_shift
+  time /= time_scale
+
+  coseismic_times -= time_shift
+  coseismic_times /= time_scale
+  afterslip_times -= time_shift
+  afterslip_times /= time_scale
+
+  param['initial_slip_variance'] /= slip_scale**2
+  param['fluidity_variance'] *= relax_scale**2
+  param['secular_velocity_variance'] /= (disp_scale/time_scale)**2
+  param['baseline_displacement_variance'] /= disp_scale**2
 
   # define slip functions and slip jacobian here
+  slip_func,slip_jac = steps_and_ramps(coseismic_times,
+                                       afterslip_times)
 
   Nst = len(coseismic_times) + len(afterslip_start_times)
   Ns,Ds,Nv,Nx,Dx = np.shape(G)
   Nt = len(time)
   
   # check for consistency between input
-  assert np.shape(data['mean']) == (Nt,Nx,Dx)
-  assert np.shape(data['variance']) == (Nt,Nx,Dx)
-  assert np.shape(F) == (Ns,Ds,Nx,Dx)
-  assert np.shape(G) == (Ns,Ds,Nv,Nx,Dx)
+  assert data['mean'].shape == (Nt,Nx,Dx)
+  assert data['variance'].shape == (Nt,Nx,Dx)
+  assert F.shape == (Ns,Ds,Nx,Dx)
+  assert G.shape == (Ns,Ds,Nv,Nx,Dx)
   p = state_parser(Nst,Ns,Ds,Nv,Nx,Dx)
 
   if param['solver'] == 'bvls':
@@ -351,7 +373,7 @@ def main(data,gf,param,outfile):
                       solver=solver, 
                       solver_args=solver_args,
                       solver_kwargs=solver_kwargs,
-                      LM_damping=False,
+                      LM_damping=True,
                       output=['solution','solution_covariance'])
 
   time_indices = range(Nt)
@@ -361,49 +383,51 @@ def main(data,gf,param,outfile):
     outfile['data/mask'][i,...] = data['mask'][i,...]
     outfile['data/covariance'][i,...] = data['variance'][i,...]
     di = data['mean'][i,...]
+    di -= disp_shift
+    di /= disp_scale
+
     di_mask = np.array(data['mask'][i,:],dtype=bool)
     # expand to three dimensions
     di_mask = np.repeat(di_mask[...,None],3,-1)
     di = di[~di_mask]
-    print('data: %s' % np.shape(di))
-    #di = flat_data(di)
-
-    #di_mask = flat_data(di_mask)
-
     Cdi = data['variance'][i,...]
+    Cdi /= disp_scale**2
     Cdi = Cdi[~di_mask]
-    #Cdi = flat_data(Cdi)
 
-    #data_indices = np.nonzero(~di_mask)[0]
-    #                      data_indices=data_indices,
     Xprior,Cprior = modest.nonlin_lstsq(
                       observation,
                       di,
                       Xprior, 
                       data_covariance=Cdi,
                       prior_covariance=Cprior,
-                      system_args=(time_shifted[i],F,G,p,slip_func,di_mask),
+                      system_args=(time[i],F,G,p,slip_func,di_mask),
                       jacobian=observation_jacobian,
-                      jacobian_args=(time_shifted[i],F,G,p,slip_func,slip_jac,di_mask),
+                      jacobian_args=(time[i],F,G,p,slip_func,slip_jac,di_mask),
                       solver=solver, 
                       solver_args=solver_args,
                       solver_kwargs=solver_kwargs,
                       maxitr=param['maxitr'],
-                      LM_damping=False,
+                      LM_damping=True,
                       LM_param=1.0,
                       rtol=1e-2,
                       atol=1e-2,
                       output=['solution','solution_covariance'])
 
+  post_mean_scaled,post_cov_scaled = Xprior,Cprior
 
+  post_mean = np.copy(post_mean_scaled)
+  post_mean[p['baseline_displacement']] *= disp_scale
+  post_mean[p['baseline_displacement']] += disp_shift
+  post_mean[p['secular_velocity']] *= (disp_scale/time_scale)  
+  post_mean[p['slip']] *= slip_scale
+  post_mean[p['fluidity']] /= relax_scale
 
-  post_mean,post_cov = Xprior,Cprior
   for i in range(Nt):
     outfile['state/all'][i,:] = post_mean
     outfile['state/baseline_displacement'][i,...] = post_mean[p['baseline_displacement']]   
     outfile['state/secular_velocity'][i,...] = post_mean[p['secular_velocity']]   
-    outfile['state/slip'][i,...] = slip_func(post_mean[p['slip']],time_shifted[i])   
-    outfile['state/slip_derivative'][i,...] = slip_func(post_mean[p['slip']],time_shifted[i],diff=1)   
+    outfile['state/slip'][i,...] = slip_func(post_mean[p['slip']],time[i])   
+    outfile['state/slip_derivative'][i,...] = slip_func(post_mean[p['slip']],time[i],diff=1)
     outfile['state/fluidity'][i,...] = post_mean[p['fluidity']]   
 
   # compute predicted data
@@ -411,35 +435,43 @@ def main(data,gf,param,outfile):
   error = 0.0
   count = 0
   for i in range(Nt):
-    predicted = observation_t(post_mean,
-                              time_shifted[i],
+    predicted = observation_t(post_mean_scaled,
+                              time[i],
                               F,G,p,slip_func)
+    # change back to meters
+    predicted *= disp_scale    
+    predicted += disp_shift
     residual = outfile['data/mean'][i,...] - predicted
     covariance = outfile['data/covariance'][i,...]
     data_mask = np.array(outfile['data/mask'][i,...],dtype=bool)
     error += L2(residual,covariance,data_mask) 
-    count += len(np.nonzero(~data_mask)[0])
+    count += np.sum(~data_mask)
 
     outfile['predicted/mean'][i,...] = predicted
 
     mask = np.zeros(p['total'])
     mask[p['secular_velocity']] = 1.0
     mask[p['baseline_displacement']] = 1.0
-    mask_post_mean = post_mean*mask
-    outfile['tectonic/mean'][i,...] = observation_t(
-                                        mask_post_mean,
-                                        time_shifted[i],
-                                        F,G,p,
-                                        slip_func)
+    mask_post_mean = post_mean_scaled*mask
+    tectonic = observation_t(mask_post_mean,
+                             time[i],
+                             F,G,p,
+                             slip_func)
+    tectonic *= disp_scale
+    tectonic += disp_shift
+    outfile['tectonic/mean'][i,...] = tectonic
+
     mask = np.zeros(p['total'])
     mask[p['slip']] = 1.0
-    mask_post_mean = post_mean*mask
-    outfile['elastic/mean'][i,...] = observation_t(
-                                       mask_post_mean,
-                                       time_shifted[i],
-                                       F,G,p,
-                                       slip_func)
-    
+    mask_post_mean = post_mean_scaled*mask
+    elastic = observation_t(mask_post_mean,
+                            time[i],
+                            F,G,p,
+                            slip_func)
+
+    elastic *= disp_scale
+    outfile['elastic/mean'][i,...] = elastic 
+
     visc = (outfile['predicted/mean'][i,...] - 
             outfile['tectonic/mean'][i,...] - 
             outfile['elastic/mean'][i,...])

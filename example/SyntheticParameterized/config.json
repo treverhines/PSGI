@@ -10,7 +10,7 @@
 "_afterslip_start_times": [ 2010.0 ,  2010.5],
 "_afterslip_end_times": [ 2010.5,  2011.0],
 "time_blocks":1,
-"secular_velocity_variance":1e6,
+"secular_velocity_variance":1e-6,
 "secular_velocity_mean":0.0,
 "baseline_displacement_mean":0.0,
 "baseline_displacement_variance":1e3,
