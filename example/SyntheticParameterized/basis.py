@@ -8,9 +8,9 @@
 # this script must also define the slip and fluidity basis functions
 #
 from __future__ import division
-from spectral.bspline import augmented_knots
-from spectral.bspline import natural_knots
-from spectral.bspline import bspline_nd
+from rbf.bspline import augmented_knots
+from rbf.bspline import natural_knots
+from rbf.bspline import bspnd as bspline_nd
 from modest import linear_to_array_index
 from modest import Perturb
 import transform as trans
@@ -139,7 +139,7 @@ def fluidity(x,coeff,diff=None):
   return out
 
 if __name__ == '__main__':
-  from tplot.xsection import XSection
+  from myplot.xsection import XSection
   import mayavi.mlab
   
   bm = BASEMAP

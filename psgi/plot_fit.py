@@ -3,8 +3,8 @@ from __future__ import division
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider
-from tplot.basemap import Basemap
-from tplot.quiver import Quiver
+from myplot.basemap import Basemap
+from myplot.quiver import Quiver
 import misc
 import matplotlib
 matplotlib.quiver.Quiver = Quiver # for error ellipses

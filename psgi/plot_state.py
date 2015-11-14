@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 from __future__ import division
-from tplot.xsection import XSection
-from tplot.xsection import VectorXSection
-from tplot.axes3d import Axes3D
-from psgi.filter import state_parser
+from myplot.xsection import XSection
+from myplot.xsection import VectorXSection
+from myplot.axes3d import Axes3D
+from psgi.parameterized import state_parser
 from matplotlib.widgets import Slider
 from traits.api import HasTraits, Range, Instance, on_trait_change, Array
 from traitsui.api import View, Item, Group
 from mayavi.core.api import PipelineBase
 from mayavi.core.ui.api import MayaviScene, SceneEditor,MlabSceneModel
-import tplot.topo
+import myplot.topo
 import mayavi.mlab
 import modest
 import numpy as np
@@ -97,7 +97,7 @@ def view(state,param):
                 Group('time'),resizable=True)
 
     def __init__(self):
-      #tplot.topo.draw_topography(bm,opacity=0.2)
+      #myplot.topo.draw_topography(bm,opacity=0.2)
       time_index = np.argmin(abs(state['time'][...] - self.time))
       slip = np.array(state[str(param['slip_type'])][time_index])
       self.xs = ()
@@ -129,12 +129,12 @@ def view(state,param):
         else:
           self.vxs[i].redraw()   
 
-      #tplot.topo.draw_topography(bm,opacity=0.2) 
+      #myplot.topo.draw_topography(bm,opacity=0.2) 
 
   mayavi.mlab.figure(1)
   xs1.draw()
   xs2.draw(color=(0.2,0.2,0.2),opacity=0.5)
-  tplot.topo.draw_topography(bm,opacity=0.2)
+  myplot.topo.draw_topography(bm,opacity=0.2)
   #mayavi.mlab.figure(2)
   xs2 = InteractiveSlip()
   xs2.configure_traits()
